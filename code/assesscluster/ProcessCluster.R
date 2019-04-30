@@ -1,0 +1,84 @@
+rm(list = setdiff(ls(), "params"))
+homedir <- params$homedir
+setwd(homedir)
+savedir <- paste(params$resultsdir,'analyzecluster/',sep='')
+dir.create(savedir,recursive=T)
+source('code/misc/fxns.R')
+
+microSample <- read.csv(paste(params$opdir,'processed/microSample.csv',sep=''))[,-(1:2)] # Get rid of index column and INDDIDs
+patientSample <- read.csv(paste(params$opdir,'processed/patientSample.csv',sep=''))[,-(1:2)] # Get rid of index column and INDDIDs
+
+INDDIDs <- read.csv(paste(params$opdir,'processed/microSample.csv',sep=''))[,2]
+#microSample <- as.data.frame(scale(microSample,center = T))
+if(sum((colSums(is.na(microSample)) == nrow(microSample))) > 0){
+  break
+}
+
+
+#################
+### Load data ###
+#################
+
+pathItems.type <- fliplr(list("NeuronLoss","Gliosis","Angiopathy","Ubiquitin","Thio","TDP43","Tau","Syn","Antibody"))
+pathItems.index <- sapply(1:length(pathItems.type), function(i) grep(pathItems.type[[i]], colnames(microSample)))
+pathItems.labels <- sapply(1:length(pathItems.type), function(i) c(matrix("",floor(0.5*length(pathItems.index[[i]]))),
+                                                                   pathItems.type[[i]], c(matrix("",ceiling(0.5*length(pathItems.index[[i]])-1)))))
+pathItems.index <- Reduce(c,pathItems.index)
+pathItems.labels <- Reduce(c,pathItems.labels)
+
+# order microSample columns to appear in Fig. 4d displaying cluster centroids
+microSample <- microSample[,pathItems.index]
+
+#cl.data <- readMat('data/subjectClusterLouvain.mat')
+cl.data <- readMat(paste(params$opdir,'optimcluster/subjectClusterLouvainPartitionsByGammaNReps1000.mat',sep=''))
+partitions.by.gamma <- cl.data$partitions.by.gamma
+partitions.by.gamma <- round(partitions.by.gamma)
+gamma.opt = params$gamma.opt
+gamma.rng <- round(cl.data$gamma.rng*10) /10 # doubles got saved with 1e-16 error
+partition <- partitions.by.gamma[,which(gamma.rng == gamma.opt)]
+
+DisconnectedSubjects <- cl.data$DisconnectedSubjects
+if(!is_empty(DisconnectedSubjects)){
+  microSample <- microSample[-DisconnectedSubjects,]
+}
+
+############################
+### Annex small clusters ###
+############################
+
+thrsh <- 0.01 # if cluster is < 1% of sample, annex it to another cluster
+k <- max(partition)
+
+cluster.counts.by.gamma <- lapply(1:ncol(partitions.by.gamma), function(i)
+  sapply(1:max(partitions.by.gamma[,i]), function(k.i) sum(partitions.by.gamma[,i]==k.i)))
+names(cluster.counts.by.gamma) <- as.character(gamma.rng)
+centroids <- compute.centroids(microSample,partition)
+
+partition <- annex.small.clusters(partition,X = microSample,centroids = centroids,thrsh = thrsh)
+#list[partition,DisconnectedSubjects] <- disconnect.small.clusters(partition)
+partition <- remove.Partition.Gap(partition)
+centroids <- compute.centroids(microSample,partition)
+
+########################
+### Reorder clusters ###
+########################
+
+# order clusters the same way 
+# regardless of the arbitrary ordering of louvain
+# only if 4 clusters
+
+cluster.init.reorder <- order.cluster.by.feature.old(microSample,centroids,c('CBTau','Thio','TDP43','Syn'))
+# vs.
+#cluster.init.reorder <- order.cluster.by.feature(microSample,centroids)
+
+# only reorder if you can make a unique match for each cluster
+if(length(unique(cluster.init.reorder)) == length(cluster.init.reorder)){
+	partition <- reorder.partition(partition,cluster.init.reorder)
+}
+# recompute centroids with reordered partition
+centroids <- compute.centroids(microSample,partition)
+
+k <- max(partition)
+# save new partition
+save(partition,centroids,k,DisconnectedSubjects,pathItems.labels,
+	file = paste(savedir,'subjLouvainPartitionReordered.RData',sep=''))
