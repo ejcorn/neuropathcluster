@@ -2,7 +2,7 @@ clearvars -except k BCT_path homedir opdir resultsdir; close all; clc
 
 k = 4;
 BCT_path = '~/Dropbox/Cornblath_Bassett_Projects/code/BCT';
-homedir = '~/Dropbox/Neurodegeneration/PathCogClinDx/';
+homedir = '~/Dropbox/Neurodegeneration/PathCogClinDx/neuropathcluster/';
 resultsdir = 'neuropathcluster_R0.75C0.75/results_G2.1/';
 %% Define constant variables
 

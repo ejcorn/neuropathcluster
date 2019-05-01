@@ -21,7 +21,7 @@ indices = indices(ord);
 cmap = cmap(ord,:);
 indices = reshape(indices,[],1); % convert inputs to row vectors
 
-laus234nifti = load_nii('~/Dropbox/Neurodegeneration/PathCogClinDx/data/img/ROIv_scale125_dilatedBS.nii.gz');
+laus234nifti = load_nii('~/Dropbox/Neurodegeneration/PathCogClinDx/neuropathcluster/data/img/ROIv_scale125_dilatedBS.nii.gz');
 %% duplicate left and right
 
 h_subcort234 = [109:112,114:115,227:230,232:237];

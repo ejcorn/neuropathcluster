@@ -27,7 +27,7 @@ indices = indices(ord);
 betas = betas(ord);
 betas = reshape(betas,[],1); indices = reshape(indices,[],1); % convert inputs to row vectors
 
-laus234nifti = load_nii('~/Dropbox/Neurodegeneration/PathCogClinDx/data/img/ROIv_scale125_dilatedBS.nii.gz');
+laus234nifti = load_nii('~/Dropbox/Neurodegeneration/PathCogClinDx/neuropathcluster/data/img/ROIv_scale125_dilatedBS.nii.gz');
 %% convert Nx1 betas to a Nx3 matrix of RGB values
 
 betas(end+1) = 5;

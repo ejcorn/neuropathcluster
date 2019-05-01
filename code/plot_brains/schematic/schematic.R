@@ -2,7 +2,7 @@ library(colorspace)
 library(R.matlab)
 library(ggplot2)
 library(reshape2)
-homedir <- '~/Dropbox/Neurodegeneration/PathCogClinDx/code/plot_brains/schematic'
+homedir <- '~/Dropbox/Neurodegeneration/PathCogClinDx/neuropathcluster/code/plot_brains/schematic'
 setwd(homedir)
 
 roi_names <- list('Cingulate Cortex','Occipital Cortex','Superior-middle temporal cortex',

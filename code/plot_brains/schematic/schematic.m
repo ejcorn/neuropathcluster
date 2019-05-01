@@ -1,7 +1,7 @@
 clear all; close all; clc
 
 BCT_path = '~/Dropbox/Cornblath_Bassett_Projects/code/BCT';
-homedir = '~/Dropbox/Neurodegeneration/PathCogClinDx/code/plot_brains';
+homedir = '~/Dropbox/Neurodegeneration/PathCogClinDx/neuropathcluster/code/plot_brains';
 addpath(genpath(pwd));
 %% Plot schematic indicating which brain regions were sampled
 

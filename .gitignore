@@ -2,9 +2,19 @@
 .Rhistory
 .Rapp.history
 
-# Mac files
+# output folders
+neuropathcluster_R*
+neuropathcluster_G*
 
+# data
+*.csv
+*.xlsx
+
+# Mac files
 .DS_Store
+
+# matlab
+*.m~
 
 # Session Data files
 .RData

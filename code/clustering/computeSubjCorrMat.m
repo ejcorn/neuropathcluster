@@ -1,7 +1,7 @@
 clearvars -except nreps BCT_path homedir opdir; close all; clc
 
 % BCT_path = '~/Dropbox/Cornblath_Bassett_Projects/code/BCT';
-% homedir = '~/Dropbox/Neurodegeneration/PathCogClinDx/';
+% homedir = '~/Dropbox/Neurodegeneration/PathCogClinDx/neuropathcluster/';
 % opdir = 'neuropathcluster_R0.75C1allpts/';
 % nreps = 5;
 %%
