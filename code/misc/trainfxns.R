@@ -323,6 +323,7 @@ train.test.old.GLM <- function(x,y,nreps=10,trainfrac=0.7,p.ds=0.5){
 train.test.GLM <- function(x,y,nreps=10,trainfrac=0.7,p.ds=0.5){
   # y has k columns of different labels, i.e. different clusters or different diseases
   # x contains all predictor variables
+  # x will be split into training and testing samples, then the training sample is downsampled to achieve class balance
   # p.ds is the class balance to achieve by downsampling
   # this function evaluates performance on test set with original class balance
   # 
