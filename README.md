@@ -22,3 +22,7 @@ The file ‘pipeline.R’ is located in the main directory. This file will coord
   - nreps_gammasweep: number of partitions to generate at each value of gamma, used to evaluate partition stability as a function of gamma
   - gamma.opt: choose gamma value for analyses of disease clusters (Fig. 4-8). The suitability of various gamma values can be identified by viewing the generated plot that outputs to resultsdir/optimcluster/MeanzRandbyGamma0to3nreps1000reps.pdf. We found a plateau of partition stability from gamma = 1.5-1.8, and present results for gamma = 1.7 in the paper.
   - BCT.path: local path to Brain Connectivity Toolbox, MATLAB version (found here: https://sites.google.com/site/bctnet/)
+
+## Questions, suggestions, comments?
+
+Please contact Eli Cornblath (Eli.Cornblath@pennmedicine.upenn.edu) with any questions regarding this project.
