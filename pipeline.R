@@ -110,11 +110,11 @@ source('code/genes/AllelesByClusterIsolateDisease.R')
 ##############################
 
 # GLM
-extralabs <- c('CSFGene')#,'GeneOnly')#,'CSFGene')
+extralabs <- c('CSFOnly','GeneOnly','CSFGene')
 for(extralab in extralabs){
-  # source('code/predictdisease/pd_prepdata.R')
-  # source('code/predictdisease/pd_traintestglm.R')
-  #source('code/predictdisease/pd_plotperfglm.R')
+  source('code/predictdisease/pd_prepdata.R')
+  source('code/predictdisease/pd_traintestglm.R')
+  source('code/predictdisease/pd_plotperfglm.R')
   source('code/predictdisease/pd_plotfeatureweightsglm.R')
 }
 
