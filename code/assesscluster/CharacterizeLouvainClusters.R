@@ -30,7 +30,7 @@ p2 <- ggplot(data = melted_cormat, aes(x=Var1, y=Var2, fill=value)) +
   scale_y_discrete(labels = pathItems.labels[length(pathItems.labels):1]) + 
   scale_x_discrete(labels = rownames(centroids),expand=c(0,0)) +
   #scale_fill_viridis(option = 'plasma',limits=c(1,5),breaks=c(1:5)) + 
-  scale_fill_gradientn(colours = c('white','#0D0887FF'),
+  scale_fill_gradientn(colours = c('white','#779ecb','#283480'),
     limits=c(1,5),breaks=c(1:5)) +
   theme(axis.text.x = element_text(angle = 90,vjust=0.5,size=6,colour = clusterColors),
         axis.text.y = element_text(size = 6), axis.ticks = element_blank(),
@@ -40,13 +40,12 @@ p2 <- ggplot(data = melted_cormat, aes(x=Var1, y=Var2, fill=value)) +
 p2
 ggsave(plot = p2,filename = paste(savedir,"CentroidColorbar.pdf",sep=''),width = 1.5, height = 2.25, units = "in")
 
-
 p2 <- ggplot(data = melted_cormat, aes(x=Var1, y=Var2, fill=value)) + 
   geom_tile() + xlab("") + ylab("") +
   scale_y_discrete(labels = pathItems.labels[length(pathItems.labels):1]) + 
   scale_x_discrete(labels = rownames(centroids),expand=c(0,0)) +
   #scale_fill_viridis(option = 'plasma') + 
-  scale_fill_gradientn(colours = c('white','#0D0887FF')) +
+  scale_fill_gradientn(colours = c('white','#779ecb','#283480')) +
   theme(axis.text.x = element_text(angle = 90,vjust=0.5,size=6,colour = clusterColors),
         axis.text.y = element_text(size = 6), axis.ticks = element_blank(),
         legend.position = 'none')

@@ -10,6 +10,20 @@ imagesc.prep <- function(A){
   return(melted_cormat)
 }
 
+roundUpToMultiple <- function(n,k){
+  # round up n to nearest integer multiple of k
+  # only works for n > 0
+  x = ceil(n/k) * k
+  return(x)
+}
+
+roundDownToMultiple <- function(n,k){
+  # round down n to nearest integer multiple of k
+  # only works for n > 0
+  x = floor(n/k) * k + 1
+  return(x)
+}
+
 fliplr <- function(x){
   x <- x[length(x):1]
   return(x)
@@ -50,6 +64,14 @@ rowSD <- function(x){
 
 colSD <- function(x){
   return(apply(x,2,sd))
+}
+
+rowMedians <- function(x){
+  return(apply(x,1, function(y) median(y,na.rm = T)))
+}
+
+colMedians <- function(x){
+  return(apply(x,2, function(y) median(y,na.rm = T)))
 }
 
 substrRight <- function(x, n){

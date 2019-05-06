@@ -333,8 +333,8 @@ train.test.GLM <- function(x,y,nreps=10,trainfrac=0.7,p.ds=0.5){
   tte <- list()  
   for(k.i in 1:k){
     n.i <- colnames(y)[k.i] # k are clusters or diseases
+    y.i <- y[,k.i] # select class labels for particular one vs. all cluster/disease prediction task
     for(i in 1:nreps){
-      y.i <- y[,k.i] # select class labels for particular one vs. all cluster/disease prediction task
       # split into training and testing data sets
       list[df.train,y.i.train,df.test,y.i.test,train.idx] <- train.test.split(x=x,y=y.i,trainfrac=trainfrac)
       # balance training set by downsampling majority class

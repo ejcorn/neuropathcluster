@@ -323,7 +323,7 @@ plot.featureweights.rf <- function(res,colors,ttl = 'Feature Weights'){
       ggtitle(ttl) + theme_classic() + 
       theme(text = element_text(size=8), plot.title = element_text(hjust=0.5),
       legend.key.size=unit(0.4,'cm'),axis.text.x = element_text(hjust=0.5,vjust=0.5,angle=90),
-      axis.text.y = element_text(color=colors))
+      axis.text.y = element_text(color=colors), plot.margin = unit(c(0, 0, 0, 0), "cm"))
 
   return(p1)
 }

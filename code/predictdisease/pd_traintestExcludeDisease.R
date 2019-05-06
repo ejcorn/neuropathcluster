@@ -5,6 +5,7 @@ savedir <- paste(params$resultsdir,'predictdisease/',sep='')
 dir.create(savedir,recursive=T)
 source('code/misc/fxns.R')
 source('code/misc/trainfxns.R')
+source('code/misc/kfold.R')
 
 #################
 ### Load data ###
@@ -43,11 +44,10 @@ print(cluster.counts)
 ### Train and test model ###
 ############################
 
-cluster.res <- train.test.GLM(x=df,y=clusters,nreps=500,trainfrac=0.5)
+cluster.res <- kfold.GLM(x=df,y=clusters,nreps=100,k.folds=5)
 
 ########################
 ### Save performance ###
 ########################
 
 save(cluster.res, file = paste(savedir,'predictcluster_GLMperf',extralab,'Exclude',dz.exc,'.RData',sep=''))
-

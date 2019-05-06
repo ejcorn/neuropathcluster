@@ -2,6 +2,7 @@
 ### Set input variables ###
 ###########################
 
+rm(list=ls())
 homedir <- '~/Dropbox/Neurodegeneration/PathCogClinDx/neuropathcluster/'
 setwd(homedir)
 
@@ -109,11 +110,11 @@ source('code/genes/AllelesByClusterIsolateDisease.R')
 ##############################
 
 # GLM
-extralabs <- c('CSFOnly')#,'CSFGene','GeneOnly')#,'CSFGene')
+extralabs <- c('CSFGene')#,'GeneOnly')#,'CSFGene')
 for(extralab in extralabs){
-  source('code/predictdisease/pd_prepdata.R')
-  source('code/predictdisease/pd_traintestglm.R')
-  source('code/predictdisease/pd_plotperfglm.R')
+  # source('code/predictdisease/pd_prepdata.R')
+  # source('code/predictdisease/pd_traintestglm.R')
+  #source('code/predictdisease/pd_plotperfglm.R')
   source('code/predictdisease/pd_plotfeatureweightsglm.R')
 }
 
@@ -124,15 +125,6 @@ for(extralab in extralabs){
   source('code/predictdisease/pd_traintestrf.R')
   source('code/predictdisease/pd_plotperfrf.R')
   source('code/predictdisease/pd_plotfeatureweightsrf.R')
-}
-
-# lasso
-extralabs <- c('CSFOnly')
-for(extralab in extralabs){
-  source('code/predictdisease/pd_prepdata.R')
-  source('code/predictdisease/pd_traintestlasso.R')
-  source('code/predictdisease/pd_plotperflasso.R')
-  source('code/predictdisease/pd_plotfeatureweightslasso.R')
 }
 
 ##############################################
