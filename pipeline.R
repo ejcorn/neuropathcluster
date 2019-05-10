@@ -76,6 +76,7 @@ source('code/genes/ProcessAlleles.R')
 source('code/genes/AlleleProportionsByCluster.R')
 source('code/genes/AllelesByCluster.R')
 source('code/cogcsf/CSFByCluster.R')
+source('code/cogcsf/CSFByClusterOutliers.R') # ensure CSF analysis is robust to outliers
 
 ################################
 ### Exclude/isolate diseases ###
@@ -86,6 +87,7 @@ exc.cl <- 2
 n.dx <- 4
 source('code/cogcsf/CogByClusterExcludeDisease.R')
 source('code/cogcsf/CSFByClusterExcludeDisease.R')
+source('code/cogcsf/CSFByClusterOutliersExcludeDisease.R') # ensure CSF analysis is robust to outliers
 source('code/genes/AlleleProportionsByClusterExcludeDisease.R')
 source('code/genes/AllelesByClusterExcludeDisease.R')
 

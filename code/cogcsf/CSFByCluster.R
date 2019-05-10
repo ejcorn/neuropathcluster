@@ -52,15 +52,12 @@ partitionSample <- sapply(partitionSample, function(i) paste('Cluster',i))
 
 CSF.mean <- CSF.mean[,-1]
 
-
-ymax <- 1000
-n.breaks <- 4 # set the number of breaks on the original plot so the tick label scaling is done automatically
 df <- data.frame(y=as.vector(as.matrix(CSF.mean)),
                  x=rep(colnames(CSF.mean),each=nrow(CSF.mean)),
                  g=rep(partitionSample,ncol(CSF.mean)))
 comps <- lapply(as.data.frame(combn(levels(df$g),m = 2)),function(x) as.character(x))
 p <- ggplot(data=df,aes(x=g,y=y,fill=g)) + geom_boxplot(outlier.size=0.5) + theme_classic()+
-  facet_wrap(~x) + scale_y_continuous(breaks=pretty_breaks(n=n.breaks)(df$y)) +
+  facet_wrap(~x,scales='free') +
   scale_fill_manual(values=clusterColors,name='') + ylab('CSF Protein (pg/ml)') + xlab('') +  
   theme(legend.position = 'none',legend.key.size = unit(0.1,'in')) + #c(0.1,0.75)
   theme(text= element_text(size=8),
@@ -68,25 +65,28 @@ p <- ggplot(data=df,aes(x=g,y=y,fill=g)) + geom_boxplot(outlier.size=0.5) + them
   stat_compare_means(size=2,comparisons = comps,position=5) 
 #p <- ggplot_build(p)
 p <- mult.comp.ggpubr(p)
-p <- fix.yscale(p,ymax,n.breaks)
 pdf.options(reset = TRUE, onefile = FALSE)
 pdf(file = paste(savedir,'/CSF',CSF.name,'BoxplotsbyClusterLouvain.pdf',sep=''),height = unit(4,'in'),width=unit(3.5,'in'),useDingbats = F)
 plot(ggplot_gtable(p)) #+ scale_y_continuous(limits=c(0,ymax))
 dev.off()
 
-
 # get sample size and effect size
 
-clusterNames <- sapply(1:k, function(k.i) paste('Cluster',k.i))
-results <- samp.size <- list()
+clusterNames <- sort(unique(partitionSample))
+results <- samp.size <- p.vals <- list()
 for(CSF.protein in colnames(CSF.mean)){
-  results[[CSF.protein]] <- matrix(NA,ncol = k, nrow = k,dimnames = list(clusterNames,clusterNames))
-  samp.size[[CSF.protein]] <- matrix(NA,ncol = k, nrow = k,dimnames = list(clusterNames,clusterNames))
+  results[[CSF.protein]] <- samp.size[[CSF.protein]] <- p.vals[[CSF.protein]] <- 
+    matrix(NA,ncol = k, nrow = k,dimnames = list(clusterNames,clusterNames)) 
+  # store data in new variables
+  CSF.mean.test <- CSF.mean
+  partitionSample.test <- partitionSample
   for(k1 in clusterNames){
-    for(k2 in clusterNames){
-      m <- wilcox.test(CSF.mean[partitionSample == k1,CSF.protein],CSF.mean[partitionSample == k2,CSF.protein],conf.int = TRUE)
+    for(k2 in clusterNames){      
+      m <- wilcox.test(CSF.mean.test[partitionSample.test == k1,CSF.protein],CSF.mean.test[partitionSample.test == k2,CSF.protein],conf.int = TRUE)
       results[[CSF.protein]][k1,k2] <- m$estimate
-      samp.size[[CSF.protein]][k1,k2] <- sum(partitionSample %in% c(k1,k2))
+      samp.size[[CSF.protein]][k1,k2] <- sum(partitionSample.test %in% c(k1,k2))
+      p.vals[[CSF.protein]][k1,k2] <- m$p.value
     }
-  }
+  }  
 }
+p.vals <- list.fdr.correct(p.vals)

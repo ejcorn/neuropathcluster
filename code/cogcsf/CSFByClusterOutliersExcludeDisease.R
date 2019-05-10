@@ -76,26 +76,6 @@ print(paste('CSF: Exclude',dz.exc))
 print(cluster.counts)
 print(paste('Exclude',dz.exc,'n =',length(partitionSample)))
 
-df <- data.frame(y=as.vector(as.matrix(CSF.mean)),
-                 x=rep(colnames(CSF.mean),each=nrow(CSF.mean)),
-                 g=rep(partitionSample,ncol(CSF.mean)))
-comps <- lapply(as.data.frame(combn(levels(df$g),m = 2)),function(x) as.character(x))
-p <- ggplot(data=df,aes(x=g,y=y,fill=g)) + geom_boxplot(outlier.size=0.5) + theme_classic()+
-  facet_wrap(~x, scales='free') +
-  scale_fill_manual(values=clusterColors,name='') + ylab('CSF Protein (pg/ml)') + xlab('') +  
-  theme(legend.position = 'none',legend.key.size = unit(0.1,'in')) + #c(0.1,0.75)
-  theme(text= element_text(size=8),
-        axis.text.x = element_text(angle=90,vjust=0.5,hjust=1,color = clusterColors)) + 
-  stat_compare_means(size=2,comparisons = comps,position=5) 
-#p <- ggplot_build(p)
-p <- mult.comp.ggpubr(p)
-pdf.options(reset = TRUE, onefile = FALSE)
-pdf(file = paste(savedir,'/CSF',CSF.name,'BoxplotsbyClusterLouvainExclude',dz.exc,'NDx',n.dx,'.pdf',sep=''),height = unit(4,'in'),width=unit(3.5,'in'),useDingbats = F)
-plot(ggplot_gtable(p))
-dev.off()
-
-# get sample size and effect size
-
 clusterNames <- sort(unique(partitionSample))
 results <- samp.size <- p.vals <- list()
 for(CSF.protein in colnames(CSF.mean)){
@@ -114,3 +94,39 @@ for(CSF.protein in colnames(CSF.mean)){
   }  
 }
 p.vals <- list.fdr.correct(p.vals)
+min.beta <- min(results[['LuminexTTau']])
+max.beta <- max(results[['LuminexTTau']])
+p.full <- plot.allele.beta.matrix(results[['LuminexTTau']],p.vals[['LuminexTTau']],'Total Tau','Full Sample',min.beta,max.beta,clusterColors)
+
+ymax <- 1000
+clusterNames <- sort(unique(partitionSample))
+results <- samp.size <- p.vals <- list()
+for(CSF.protein in colnames(CSF.mean)){
+  results[[CSF.protein]] <- samp.size[[CSF.protein]] <- p.vals[[CSF.protein]] <- 
+    matrix(NA,ncol = k, nrow = k,dimnames = list(clusterNames,clusterNames)) 
+  # store data in new variables
+  CSF.mean.test <- CSF.mean
+  partitionSample.test <- partitionSample
+  # remove 2 outliers for total tau
+  if(CSF.protein == 'LuminexTTau'){
+    outlier.mask <- CSF.mean$LuminexTTau < ymax
+    CSF.mean.test <- CSF.mean[outlier.mask,]
+    partitionSample.test <- partitionSample[outlier.mask]
+  }
+  for(k1 in clusterNames){
+    for(k2 in clusterNames){      
+      m <- wilcox.test(CSF.mean.test[partitionSample.test == k1,CSF.protein],CSF.mean.test[partitionSample.test == k2,CSF.protein],conf.int = TRUE)
+      results[[CSF.protein]][k1,k2] <- m$estimate
+      samp.size[[CSF.protein]][k1,k2] <- sum(partitionSample.test %in% c(k1,k2))
+      p.vals[[CSF.protein]][k1,k2] <- m$p.value
+    }
+  }  
+}
+p.vals <- list.fdr.correct(p.vals)
+min.beta <- min(results[['LuminexTTau']])
+max.beta <- max(results[['LuminexTTau']])
+p.outlier <- plot.allele.beta.matrix(results[['LuminexTTau']],p.vals[['LuminexTTau']],'Total Tau','No Outliers',min.beta,max.beta,clusterColors)
+
+p.all <- plot_grid(plotlist = list(p.full,p.outlier),nrow=1,align='hv')
+ggsave(filename = paste(savedir,'TotalTauFullVsOutliersRemovedExclude',dz.exc,'NDx',n.dx,'.pdf',sep=''),plot = p.all,
+         height = 6,width=9,units='cm')

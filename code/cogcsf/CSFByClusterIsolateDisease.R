@@ -75,14 +75,12 @@ print(paste('CSF: Isolate',dz.iso))
 print(cluster.counts)
 print(paste('Isolate',dz.iso,'n =',length(partitionSample)))
 
-ymax <- 1000
-n.breaks <- 4 # set the number of breaks on the original plot so the tick label scaling is done automatically
 df <- data.frame(y=as.vector(as.matrix(CSF.mean)),
                  x=rep(colnames(CSF.mean),each=nrow(CSF.mean)),
                  g=rep(partitionSample,ncol(CSF.mean)))
 comps <- lapply(as.data.frame(combn(levels(df$g),m = 2)),function(x) as.character(x))
 p <- ggplot(data=df,aes(x=g,y=y,fill=g)) + geom_boxplot(outlier.size=0.5) + theme_classic()+
-  facet_wrap(~x) + scale_y_continuous(breaks=pretty_breaks(n=n.breaks)(df$y)) +
+  facet_wrap(~x,scales='free') + 
   scale_fill_manual(values=clusterColors,name='') + ylab('CSF Protein (pg/ml)') + xlab('') +  
   theme(legend.position = 'none',legend.key.size = unit(0.1,'in')) + #c(0.1,0.75)
   theme(text= element_text(size=8),
@@ -90,7 +88,6 @@ p <- ggplot(data=df,aes(x=g,y=y,fill=g)) + geom_boxplot(outlier.size=0.5) + them
   stat_compare_means(size=2,comparisons = comps,position=5) 
 #p <- ggplot_build(p)
 p <- mult.comp.ggpubr(p)
-#p <- fix.yscale(p,ymax,n.breaks)
 pdf.options(reset = TRUE, onefile = FALSE)
 pdf(file = paste(savedir,'/CSF',CSF.name,'BoxplotsbyClusterLouvainIsolate',dz.iso,'NDx',n.dx,'.pdf',sep=''),height = unit(4,'in'),width=unit(3.5,'in'),useDingbats = F)
 plot(ggplot_gtable(p))
