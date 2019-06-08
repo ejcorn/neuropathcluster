@@ -192,10 +192,18 @@ plot.allele.beta.matrix <- function(b.mat,p.mat,g.i,a.i,min.beta,max.beta,cluste
     return(p1)
 }
 
+colorswap <- function(colors,met){
+  # if input colors are insufficient, generate a new palette. otherwise return colors input
+  if(length(colors) < length(met)){
+    colors <- colorRampPalette(brewer.pal(name = 'Set3',n=12))(length(met))
+  }
+  return(colors)
+}
+
 plot.model.perf.met <- function(met,perf.met,colors,ttl=''){
   # met: list by class of vectors of a performance metric over n reps of train test splits
   # perf.met: name of performance metric for plot label, i.e. sensitivity, specificity
-  
+  # colors: character vector of hex list. length should equal number of classes
   # compute mean and 95% CI (1.96*standard error)
   df.plt <- lapply(met, function(a)
     c(mean(a,na.rm=T),mean(a,na.rm=T) + 1.96*sd(a,na.rm=T)/sqrt(length(a)),mean(a,na.rm=T) - 1.96*sd(a,na.rm=T)/sqrt(length(a))))
@@ -203,6 +211,8 @@ plot.model.perf.met <- function(met,perf.met,colors,ttl=''){
   df.plt$dz <- rownames(df.plt)
   names(df.plt) <- c('met.mean','met.ul','met.ll','dz')
   df.plt$lab <- paste(signif(df.plt$met.ll,2),'-',signif(df.plt$met.ul,2),sep='')
+
+  colors <- colorswap(colors,met)
 
   p.dx.dz <- ggplot(data=df.plt) + geom_col(aes(x=dz,y=met.mean,fill=dz)) + 
     geom_errorbar(aes(x=dz,ymin=met.ll,ymax=met.ul)) +
@@ -218,6 +228,8 @@ plot.model.perf.met <- function(met,perf.met,colors,ttl=''){
 }
 
 plot.model.roc <- function(met,colors,ttl=''){
+
+  colors <- colorswap(colors,met)
   auc <- lapply(met, function(a) sapply(a, function(c) c$AUC))
   which.auc <- sapply(auc, function(a) which.min(abs(a-mean(a)))) # find AUC value closest to mean AUC  
   roc.objs <- mapply(function(X,Y) {list(X[[Y]]$roc.obj)}, X=met,Y=which.auc)
@@ -257,6 +269,7 @@ plot.featureweights.lm.contintsplit <- function(res,df,colors,ttl = 'Feature Wei
   weight <- t(do.call('cbind',lapply(res, function(C) # [,-1] removes intercept
         rowMeans(do.call('cbind',lapply(C, function(C.i) as.matrix(C.i$FeatureImportance)))))))[,-1]
 
+  colors <- colorswap(colors,res)
   # generate feature weight heat maps separately for continuous and interval predictors
   # the two are not comparable at all and thus should not be plotted on the same color axis
 

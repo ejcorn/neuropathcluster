@@ -1,8 +1,9 @@
 clear all; close all; clc
 
 BCT_path = '~/Dropbox/Cornblath_Bassett_Projects/code/BCT';
+basedir = '~/Dropbox/Neurodegeneration/PathCogClinDx/neuropathcluster/';
 homedir = '~/Dropbox/Neurodegeneration/PathCogClinDx/neuropathcluster/code/plot_brains';
-addpath(genpath(pwd));
+addpath(genpath(basedir));
 %% Plot schematic indicating which brain regions were sampled
 
 indices = [1:6,109:112,114:115,234:237]';

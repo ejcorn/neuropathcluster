@@ -2,6 +2,7 @@ library(colorspace)
 library(R.matlab)
 library(ggplot2)
 library(reshape2)
+library(RColorBrewer)
 homedir <- '~/Dropbox/Neurodegeneration/PathCogClinDx/neuropathcluster/code/plot_brains/schematic'
 setwd(homedir)
 
@@ -13,6 +14,7 @@ roi_names <- list('Cingulate Cortex','Occipital Cortex','Superior-middle tempora
 cort_pal <- colorRampPalette(brewer.pal(name = 'Accent',n=6))
 subcort_pal <- colorRampPalette(brewer.pal(name = 'Set1',n=9))
 roi_hexcolors <- c(cort_pal(6),subcort_pal(9))
+roi_hexcolors[roi_names == 'Caudate-putamen'] <- '#afeeee' # manually set this one to distinguish it
 df <- data.frame(lab = unlist(roi_names), y = length(roi_names):1,col = roi_hexcolors,stringsAsFactors = F)
 p <- ggplot(data=df) + geom_text(aes(x=0,y=y,label=lab,color=lab),size=1.5) +
   scale_color_manual(limits=df$lab,values = roi_hexcolors) +
