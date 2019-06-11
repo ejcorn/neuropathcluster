@@ -2,7 +2,7 @@ clearvars -except nreps BCT_path homedir opdir; close all; clc
 
 % BCT_path = '~/Dropbox/Cornblath_Bassett_Projects/code/BCT';
 % homedir = '~/Dropbox/Neurodegeneration/PathCogClinDx/neuropathcluster/';
-% opdir = 'neuropathcluster_R0.75C1allpts/';
+% opdir = 'neuropathcluster_R0.75C1allpts_final/';
 % nreps = 1000;
 %%
 savedir = [homedir,opdir,'optimcluster/']; 
@@ -81,6 +81,8 @@ save(fullfile(savedir,['ZRandScoresLouvainSubjNPSweepGamma',num2str(min(gamma_rn
 zr_mean_by_gamma = mean(zr_scores,1);
 [~,zrBestIdx] = max(zr_mean_by_gamma);
 zrBestGamma = gamma_rng(zrBestIdx);
+save(fullfile(savedir,'FigS2a_SourceData.mat'),'zr_mean_by_gamma','gamma_rng','zrBestGamma');
+
 f=figure; hold on;
 plot(gamma_rng,zr_mean_by_gamma,'Color','blue');
 xticks(gamma_rng(1:2:end)); xticklabels(gamma_rng(1:2:end));
@@ -121,6 +123,8 @@ for g = 1:n_gamma
         cluster_size_by_gamma(k_i,g) = sum(P == k_i) / size(partitions_by_gamma,1); 
     end
 end
+
+save(fullfile(savedir,'FigS2c_SourceData.mat'),'cluster_size_by_gamma');
 
 f=figure; imagesc(flipud(cluster_size_by_gamma))
 xticks(1:2:n_gamma); xticklabels(gamma_rng(1:2:end));

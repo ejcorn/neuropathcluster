@@ -31,5 +31,9 @@ p.all <- plot_grid(plotlist =
 	align = 'h',nrow=1,axis = 'b',
 		rel_widths = c(1.2,1,1,1))
 
+if(extralab == "CSFOnlyExcludeAlzheimer's disease"){
+	save(cluster.res,file = paste(savedir,'FigS11a-b_',extralab,'SourceData.RData',sep=''))
+}
+
 ggsave(filename = paste(savedir,'GLMPerformanceClusters',extralab,'.pdf',sep=''),plot = p.all,
        height = 5,width=18,units='cm')

@@ -75,6 +75,9 @@ p.vals <- list.fdr.correct(p.vals)
 min.beta <- min(results[['LuminexTTau']])
 max.beta <- max(results[['LuminexTTau']])
 p.full <- plot.allele.beta.matrix(results[['LuminexTTau']],p.vals[['LuminexTTau']],'Total Tau','Full Sample',min.beta,max.beta,clusterColors)
+list[bmat,pmat] <- list(results[['LuminexTTau']],p.vals[['LuminexTTau']])
+save(bmat,pmat,file = paste(savedir,'FigS9a_left_SourceData.RData',sep=''))
+
 
 ymax <- 1000
 clusterNames <- sort(unique(partitionSample))
@@ -104,6 +107,8 @@ p.vals <- list.fdr.correct(p.vals)
 min.beta <- min(results[['LuminexTTau']])
 max.beta <- max(results[['LuminexTTau']])
 p.outlier <- plot.allele.beta.matrix(results[['LuminexTTau']],p.vals[['LuminexTTau']],'Total Tau','No Outliers',min.beta,max.beta,clusterColors)
+list[bmat,pmat] <- list(results[['LuminexTTau']],p.vals[['LuminexTTau']])
+save(bmat,pmat,file = paste(savedir,'FigS9a_right_SourceData.RData',sep=''))
 
 p.all <- plot_grid(plotlist = list(p.full,p.outlier),nrow=1,align='hv')
 ggsave(filename = paste(savedir,'TotalTauFullVsOutliersRemoved.pdf',sep=''),plot = p.all,

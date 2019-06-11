@@ -91,6 +91,7 @@ df <- data.frame(x=rep(1,length(sub.vs.orig.cors)),
 
 # set up breaks at 0,25,50,75,100%
 brks <- round(sum(h$counts) * c(0,0.25,0.5,0.75,1))
+save(brks,df,file=paste(savedir,'FigS2b_SourceData.RData',sep=''))
 p <- ggplot(df) + 
   #geom_bar(aes(x=y,y=(..count..)/sum(..count..)),fill='red',alpha=0.6) +
   geom_histogram(aes(x=sub.vs.orig.cors),fill='red',alpha=0.6)+ 

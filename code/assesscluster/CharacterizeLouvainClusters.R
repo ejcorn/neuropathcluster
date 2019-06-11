@@ -56,6 +56,8 @@ p2 <- ggplot(data = melted_cormat, aes(x=Var1, y=Var2, fill=value)) +
 p2
 ggsave(plot = p2,filename = paste(savedir,"LouvainClusterCentroids.pdf",sep=''),width = 1.5, height = 2, units = "in")
 
+save(centroids,file = paste(savedir,'Fig2d_SourceData.RData',sep=''))
+
 ############################
 ### Cluster by diagnoses ###
 ############################
@@ -65,6 +67,8 @@ list[patientSample,dz.short]<- other.dz(patientSample)
 p.k.dz <- plot.dz.by.cluster(patientSample$NPDx1,partition,dz.short,clusterColors,'Primary\nHistopathologic Diagnosis')
 ggsave(filename = paste(savedir,'ClustersByPrimaryDiseaseLouvain.pdf',sep=''),plot = p.k.dz,
        height = 2,width=3,units='in')
+NPDx1.sd <- patientSample$NPDx1
+save(NPDx1.sd,partition,file = paste(savedir,'Fig2e_SourceData.RData',sep=''))
 
 # now isolate AD patients and plot by secondary diagnoses
 AD.mask <- patientSample$NPDx1 == 'Alzheimer\'s disease'
@@ -76,6 +80,9 @@ patientSample.AD$NPDx2[patientSample.AD$NPDx2 == 'Alzheimer\'s disease'] <- 'Non
 patientSample.AD$NPDx2[grep('Lewy',patientSample.AD$NPDx2)] <- 'LBD'
 list[patientSample.AD,dz.short.AD]<- other.dz(patientSample.AD,NPDx='NPDx2')
 p.k.dz2 <- plot.dz.by.cluster(patientSample.AD$NPDx2,partition.AD,dz.short.AD,clusterColors,'Secondary\nHistopathologic Diagnosis')
+
+NPDx2.sd <- patientSample.AD$NPDx2
+save(NPDx2.sd,partition.AD,file = paste(savedir,'Fig2f_SourceData.RData',sep=''))
 
 ############################
 ### Diagnoses by cluster ###

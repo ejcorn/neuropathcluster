@@ -121,3 +121,5 @@ p3 <- ggplot() +
 
 p1p2p3 <- plot_grid(plotlist=list(p1,p3,p2),align = 'hv',nrow=1)
 ggsave(p1p2p3,filename = paste(savedir,'subjectCorrMats.png',sep=''),units = 'in',height = 8/3,width = 8)
+
+save(W,dz.Names,partition,file = paste(savedir,'Figure2a-c_SourceData.RData',sep=''))

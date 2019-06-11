@@ -72,6 +72,7 @@ p1 <- ggplot() + geom_point(aes(x = seq(0,100,length.out = 100), y = 100*DataRep
   theme(plot.title = element_text(size = 8,hjust=0.5),text=element_text(size=8))
 p1
 ggsave(p1,filename = paste(savedir,'DataRepresentationSubjects.pdf',sep=''),units= 'cm',height = 4.5,width=4.5)
+save(DataRepresentation, file=paste(savedir,'FigS1a_SourceData.RData',sep=''))
 
 DataRepresentation <- sapply(seq(0,1,length.out = 100), function(i) 100*mean((colSums(is.na(microSample)) < i*nrow(microSample))))
 # Y axis shows percent of features with less than X% of subjects containing missing data
@@ -80,7 +81,7 @@ p1 <- ggplot() + geom_point(aes(x = seq(0,100,length.out = 100), y = DataReprese
   theme(plot.title = element_text(size =8,hjust=0.5),text=element_text(size=8))
 p1
 ggsave(p1,filename = paste(savedir,'DataRepresentationFeatures.pdf',sep=''),units= 'cm',height = 4.5,width=4.5)
-
+save(DataRepresentation, file=paste(savedir,'FigS1b_SourceData.RData',sep=''))
 # Remove subjects with too many NAs -- discuss what this really ought to be given the graph above
 
 missing.thrsh.r <- params$missing.thrsh.r
@@ -217,4 +218,4 @@ CSF <- CSF[order(CSF$INDDID),]
 
 CSF$CSFDate <- as.Date(CSF$CSFDate,format = '%m/%d/%Y')
 
-CSF <- write.csv(x=CSF, file = paste(params$opdir,'processed/CSF',CSF.name,'_processed.csv',sep=''))
+write.csv(x=CSF, file = paste(params$opdir,'processed/CSF',CSF.name,'_processed.csv',sep=''))

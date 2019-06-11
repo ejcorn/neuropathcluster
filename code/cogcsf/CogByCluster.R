@@ -79,6 +79,8 @@ ggsave(filename = file.path(savedir,'MOCASubscoreMeansbyClusterLouvain.pdf'),plo
        height = 3,width=5,units='in')
 
 df <- data.frame(x=rep(partitionSample,ncol(cog.moca)),y=as.vector(as.matrix(cog.moca)),g=rep(colnames(cog.moca),each=nrow(cog.moca)))
+save(df,file = paste(savedir,'Fig3a_SourceData.RData',sep=''))
+
 p <- ggplot(data=df,aes(x=x,y=y,fill=x)) + geom_boxplot(outlier.size=0.5) + theme_classic() +
   facet_wrap(~g) +
   scale_fill_manual(values=clusterColors,name='') + ylab('Score') +

@@ -80,6 +80,8 @@ df <- data.frame(y=as.vector(as.matrix(CSF.mean)),
                  x=rep(colnames(CSF.mean),each=nrow(CSF.mean)),
                  g=rep(partitionSample,ncol(CSF.mean)))
 comps <- lapply(as.data.frame(combn(levels(df$g),m = 2)),function(x) as.character(x))
+save(df,file = paste(savedir,'FigS4a_SourceData.RData',sep=''))
+
 p <- ggplot(data=df,aes(x=g,y=y,fill=g)) + geom_boxplot(outlier.size=0.5) + theme_classic()+
   facet_wrap(~x, scales='free') +
   scale_fill_manual(values=clusterColors,name='') + ylab('CSF Protein (pg/ml)') + xlab('') +  

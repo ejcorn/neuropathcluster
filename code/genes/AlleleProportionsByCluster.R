@@ -45,6 +45,7 @@ for(g.i in names(Allele.Tables)){
   df <- data.frame(y=as.vector(Allele.Proportions),
                    g=as.vector(sapply(clusterNames, function(i) matrix(rownames(Allele.Proportions),ncol=1))),
                    x=rep(clusterNames,each=nrow(Allele.Proportions)))
+  save(df,file=paste(savedir,'Fig4a-b_',g.i,'SourceData.RData',sep=''))
   pal.g <- colorRampPalette(brewer.pal(name = 'Set3',n=12))
   pal.g <- pal.g(12)[G.color.inds[[g.i]]]
   p <- ggplot(data=df,aes(y=y,x=x,fill=g)) + geom_col(position=position_dodge(width = 0.9)) + theme_classic()+ 

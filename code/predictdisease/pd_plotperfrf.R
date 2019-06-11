@@ -66,3 +66,8 @@ p.all <- plot_grid(plotlist= list(p.d,p.c), align = 'hv',nrow = 2,axis='b',
 
 ggsave(filename = paste(savedir,'RFPerformanceClustersDisease',extralab,'.pdf',sep=''),plot = p.all,
        height = 10,width=18,units='cm')
+
+if(extralab == 'CSFGene'){
+	save(dz.res,file = paste(savedir,'FigS8a-b_',extralab,'SourceData.RData',sep=''))
+	save(cluster.res,file = paste(savedir,'FigS8c-d_',extralab,'SourceData.RData',sep=''))
+}

@@ -85,6 +85,8 @@ for(g.i in names(betas)){
   plots[[g.i]] <- list()
   for(a.i in names(betas[[g.i]])){
     plots[[g.i]][[a.i]] <- plot.allele.beta.matrix(betas[[g.i]][[a.i]],pvals[[g.i]][[a.i]],g.i,a.i,min.beta,max.beta,clusterColors)
+    list[bmat,pmat] <- list(betas[[g.i]][[a.i]],pvals[[g.i]][[a.i]])
+    save(bmat,pmat,file = paste(savedir,'Fig4c-g',g.i,'-',a.i,'_SourceData.RData',sep=''))
   }
   p.all <- plot_grid(plotlist = plots[[g.i]], align = 'hv',nrow=1)
   ggsave(filename = paste(savedir,g.i,'Betas.pdf',sep=''),plot = p.all,
