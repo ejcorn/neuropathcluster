@@ -34,6 +34,7 @@ source('code/misc/directories.R')
 
 # go from raw INDD csvs to base data for analysis
 source('code/preprocess/GenerateSample_v2.R')
+source('code/preprocess/demographics.R') # analyze demographics (age)
 
 ###########################
 ### Analyze copathology ###
@@ -112,7 +113,7 @@ source('code/genes/AllelesByClusterIsolateDisease.R')
 ##############################
 
 # GLM
-extralabs <- c('CSFOnly')#,'GeneOnly','CSFGene')
+extralabs <- c('CSFOnly','GeneOnly','CSFGene')
 for(extralab in extralabs){
   source('code/predictdisease/pd_prepdata.R')
   source('code/predictdisease/pd_traintestglm.R')
