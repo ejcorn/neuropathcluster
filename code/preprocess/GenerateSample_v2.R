@@ -83,16 +83,19 @@ p1 <- ggplot() + geom_point(aes(x = seq(0,100,length.out = 100), y = DataReprese
 p1
 ggsave(p1,filename = paste(savedir,'DataRepresentationFeatures.pdf',sep=''),units= 'cm',height = 4.5,width=4.5)
 save(DataRepresentation, file=paste(savedir,'FigS1b_SourceData.RData',sep=''))
-# Remove subjects with too many NAs -- discuss what this really ought to be given the graph above
 
-missing.thrsh.r <- params$missing.thrsh.r
-missing.Mask <- rowMeans(is.na(microSample[,-1])) < missing.thrsh.r
-microSample <- microSample[missing.Mask,]
-
+# first remove features with a lot of missing data (amount determined by missing.thrsh.c)
 # Remove features with too many NAs -- discuss what this ought to be given the graph above
 missing.thrsh.c <- params$missing.thrsh.c
 missing.Mask <- colMeans(is.na(microSample)) < missing.thrsh.c
 microSample <- microSample[,missing.Mask]
+
+# then ensure all subjects have at least X% of remaining features (amount determined by missing.thrsh.r)
+# Remove subjects with too many NAs -- discuss what this ought to be given the graph above
+
+missing.thrsh.r <- params$missing.thrsh.r
+missing.Mask <- rowMeans(is.na(microSample[,-1])) < missing.thrsh.r
+microSample <- microSample[missing.Mask,]
 
 #####################################################
 ### Generate sample focusing on diagnostic subset ###
