@@ -77,10 +77,10 @@ if(extralab == 'CSFOnly'){
 	save(cluster.res,file = paste(savedir,'Fig5c-d_',extralab,'SourceData.RData',sep=''))
 }
 if(extralab == 'CSFGene'){
-	save(dz.res,file = paste(savedir,'FigS7a,c_',extralab,'SourceData.RData',sep=''))
-	save(cluster.res,file = paste(savedir,'FigS7b,d_',extralab,'SourceData.RData',sep=''))
+	save(dz.res,file = paste(savedir,'FigS7a,d_',extralab,'SourceData.RData',sep=''))
+	save(cluster.res,file = paste(savedir,'FigS7b,c_',extralab,'SourceData.RData',sep=''))
 }
 if(extralab == 'GeneOnly'){
 	save(dz.res,file = paste(savedir,'FigS10a-b_',extralab,'SourceData.RData',sep=''))
-	save(cluster.res,file = paste(savedir,'FigS10b-c_',extralab,'SourceData.RData',sep=''))
+	save(cluster.res,file = paste(savedir,'FigS10c-d_',extralab,'SourceData.RData',sep=''))
 }

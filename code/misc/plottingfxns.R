@@ -158,7 +158,7 @@ plot.dz.by.cluster <- function(diagnoses,partition,dz.short,clusterColors,leg.la
     scale_fill_manual(values = dz.colors,name=leg.lab) +
     theme_classic() + theme(text = element_text(size=6),legend.key.size = unit(0.01,'in')) +
     theme(axis.text.x=element_text(angle=90,vjust=0.5,color=clusterColors))
-  return(p.k.dz)
+  return(list(p.k.dz=p.k.dz,df.plt=df.plt))
 }
 
 plot.allele.beta.matrix <- function(b.mat,p.mat,g.i,a.i,min.beta,max.beta,clusterColors){

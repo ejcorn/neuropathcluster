@@ -107,7 +107,7 @@ dx.orig <- dummy.data.frame(dx1,names = 'NPDx1')
 # this allows for some overlap but only with respect to AD. This approach is more conservative
 # in that it assumes some prior knowledge of copathologic syndromes outside of clustering framework
 True.AD.mask <- !exclude.dz(patientSample,dz.exc='Alzheimer\'s disease',n.dx=4)
-dx.orig[True.AD.mask,'NPDx1Alzheimer\'s disease'] <- 1
+dx.orig[,'NPDx1Alzheimer\'s disease'] <- as.numeric(True.AD.mask)
 
 colnames(dx.orig) <- gsub('NPDx1','',dz.short)  # format column names to short disease labels
 dx.orig <- dx.orig[INDDIDs %in% df$INDDID,] # exclude patients without data of interest

@@ -8,12 +8,12 @@ setwd(homedir)
 
 # list of prespecified variables
 params <- list(missing.thrsh.r=0.75,
-               missing.thrsh.c=1,
-               extralab='allpts_final',
-               gamma.opt=1.7,
+               missing.thrsh.c=0.25,
+               extralab='_9419',
+               gamma.opt=1.6,
                nreps_gammasweep=1000, # set number of reps for gamma sweep
                homedir=homedir,
-               matlab.path='/Applications/MATLAB_R2017a.app/bin/matlab', # path to matlab binary
+               matlab.path='/Applications/MATLAB_R2019a.app/bin/matlab', # path to matlab binary
                BCT.path = '~/Dropbox/Cornblath_Bassett_Projects/code/BCT') # path to folder containing brain connectivity toolbox scripts (https://sites.google.com/site/bctnet/)
 
 #####################
@@ -41,9 +41,9 @@ source('code/preprocess/demographics.R') # analyze demographics (age)
 ###########################
 
 # data-driven analysis of copathology
-source('code/copath/NeuropathCovariance_v4.R')
-source('code/copath/CopathIndiv.R')
-source('code/copath/CellularMolecular.R')
+source('code/copath/NeuropathCovariance_v4.R') # dependent on all features initially available
+source('code/copath/CopathIndiv.R') # dependent on all features initially available
+source('code/copath/CellularMolecular.R') # dependent on all features initially available
 
 ########################
 ### Cluster Patients ###
@@ -62,8 +62,9 @@ source('code/clustering/runSplitReliabilityMATLAB_R.R')
 source('code/assesscluster/ProcessCluster.R')
 source('code/assesscluster/CharacterizeLouvainClusters.R')
 source('code/assesscluster/SubjectCorrMatLouvain.R')
+source('code/assesscluster/AgeMissingDataByCluster.R')
 
-sampfrac <- 0.8
+sampfrac <- 0.5
 source('code/assesscluster/LouvainSplitReliability.R')
 source('code/plot_brains/prep_centroid_plots.R')
 source('code/plot_brains/runPlotBrainsMATLAB_R.R')

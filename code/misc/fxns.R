@@ -83,7 +83,7 @@ other.dz <- function(patientSample,NPDx = 'NPDx1'){
   # make short names for diseases for plotting
   other <- list('Argyrophilic grain disease','Down\'s syndrome','Schizophrenia',
               'Pathological Aging','Tauopathy unclassifiable','FTLD-Other',
-              'Cerebrovascular Disease','CAA','PART','Tauopathy, unclassifiable')
+              'Cerebrovascular Disease','CAA','PART','Tauopathy, unclassifiable','')
   for(O in other){
     patientSample[,NPDx][patientSample[,NPDx] == O] <- 'Other'
   }
@@ -140,22 +140,22 @@ exclude.dz.basic <- function(patientSample,dz.exc,n.dx){
   return(Rem.Mask)
 }
 
-exclude.dz <- function(patientSample,dz.exc,n.dx){
+exclude.dz.old <- function(patientSample,dz.exc,n.dx){
   # excludes disease based on diagnosis that is > "Low Probability"
   NPDx <- sapply(1:n.dx, function(i) paste('NPDx',i,sep=''))
   NPDx <- lapply(NPDx,function(x) get(x,patientSample))
   NPDx <- lapply(NPDx, function(X) X == dz.exc)  
 
-  if(dz.exc == 'Alzheimer\'s Disease'){
+  if(dz.exc == 'Alzheimer\'s disease'){
     # find patients with either Braak03 <2 or CERAD < 2 -- these folks don't have real AD    
-    BraakMask <- patientSample$Braak03 < 2
-    CERADMask <- patientSample$CERAD < 2
+    BraakMask <- patientSample$Braak03 < 2 # patients with low Braak scores
+    CERADMask <- patientSample$CERAD < 2 # patients with low CERAD scores
     missingBraak <- is.na(patientSample$Braak03)
     missingCERAD <- is.na(patientSample$CERAD)
     # only look at people with Braak and CERAD scores present
     BraakMask[missingBraak | missingCERAD] <- FALSE
     CERADMask[missingBraak | missingCERAD] <- FALSE
-    Rem.Mask <- BraakMask | CERADMask
+    Rem.Mask <- BraakMask | CERADMask # patients with either low Braak or low CERAD and hence not meeting criteria
     
     NPDx.lik <- sapply(1:n.dx, function(i) paste('NPDx',i,'Likelihood',sep=''))
     NPDx.lik <- lapply(NPDx.lik,function(x) get(x,patientSample))
@@ -166,7 +166,7 @@ exclude.dz <- function(patientSample,dz.exc,n.dx){
     Lik.Mask <- Reduce('&',NPDx.comb)
     # if missing CERAD or Braak, use subjective likelihood
     Rem.Mask[missingBraak | missingCERAD] <- 
-      Lik.Mask[missingBraak | missingCERAD]
+      Lik.Mask[missingBraak | missingCERAD] 
     return(Rem.Mask)
 
   }
@@ -182,6 +182,160 @@ exclude.dz <- function(patientSample,dz.exc,n.dx){
 
     return(Rem.Mask)
   }
+}
+
+exclude.dz <- function(patientSample,dz.exc,n.dx){
+  # for dz.exc == Alzheimer's disease, returns a mask of patients with Braak-CERAD scores both < 1
+  # i.e. a mask selecting patients not meeting Braak-CERAD criteria
+  # if Braak-CERAD score cannot be determined, we use NPDx Likelihood (subjective pathologist dx as far as I can tell)
+  # instead. This occurs for 58/1389 patients
+  # for other diseases, this function simply returns a mask selecting patients with low probability or no diagnosis of dz.exc
+
+  NPDx <- sapply(1:n.dx, function(i) paste('NPDx',i,sep=''))
+  NPDx <- lapply(NPDx,function(x) get(x,patientSample))
+  NPDx <- lapply(NPDx, function(X) X == dz.exc)
+
+  if(dz.exc == 'Alzheimer\'s disease'){
+    # find patients with either Braak03 <2 or CERAD < 2 -- these folks don't have real AD    
+    BraakMask <- patientSample$Braak03 < 2 # patients with low Braak scores
+    CERADMask <- patientSample$CERAD < 2 # patients with low CERAD scores
+
+    # only look at people with Braak and CERAD scores present
+    Rem.Mask <- rep(NA,nrow(patientSample)) # initialize mask to select patients without Braak-CERAD AD
+    Rem.Mask[BraakMask] <- TRUE # if patients have low Braak scores they can't have Braak-CERAD AD
+    Rem.Mask[CERADMask] <- TRUE # if patients have low CERAD scores they can't have Braak-CERAD AD
+    Rem.Mask[!BraakMask & !CERADMask] <- FALSE # if patients have high Braak & CERAD scores they have Braak-CERAD AD
+    
+    # Now all other remaining patients are NAs because they have missing scores
+    # This is either patients missing both Braak & CERAD, or with high Braak or CERAD missing the other score
+    # such that you cannot rule out Braak-CERAD AD
+    # in these 58 patients we will diagnose them with AD based on NPDx1-n.dx having > low probability
+    missingBraakCERAD <- is.na(Rem.Mask)
+
+    NPDx.lik <- sapply(1:n.dx, function(i) paste('NPDx',i,'Likelihood',sep=''))
+    NPDx.lik <- lapply(NPDx.lik,function(x) get(x,patientSample))
+    NPDx.lik <- lapply(NPDx.lik, function(X) X == "Definite (High Probability)" | X == "Probable (Intermediate Probability)")# NOT anyone with non-low probability dx of dz.exc
+    # NOT anyone with non-low probability dx of dz.exc...TRUE is only low or no prob of dz.exc. false is > low prob
+    NPDx.comb <- mapply(function(NPDx,NPDx.lik){list(!(NPDx & NPDx.lik))},NPDx=NPDx,NPDx.lik=NPDx.lik)
+
+    Lik.Mask <- Reduce('&',NPDx.comb) # mask selecting patients with only low prob or no diagnosis of dz.exc
+    Dz.Mask <- Reduce('|',NPDx)  # mask selecting patients with any diagnosis of dz.exc in NPDx1 to n.dx
+
+    # if missing CERAD or Braak, use subjective likelihood. See ExclusionSanityCheck.R for confusion matrix in non-missing people.
+
+    Rem.Mask[missingBraakCERAD] <- Lik.Mask[missingBraakCERAD]
+    return(Rem.Mask)
+
+  }
+  else{
+    # incorporate subjective confidence for non-AD diagnoses
+    NPDx.lik <- sapply(1:n.dx, function(i) paste('NPDx',i,'Likelihood',sep=''))
+    NPDx.lik <- lapply(NPDx.lik,function(x) get(x,patientSample))
+    NPDx.lik <- lapply(NPDx.lik, function(X) X == "Definite (High Probability)" | X == "Probable (Intermediate Probability)")
+    # NOT anyone with non-low probability dx of dz.exc
+    #NPDx.comb <- mapply(function(NPDx,NPDx.lik){list(!(NPDx & NPDx.lik))},NPDx=NPDx,NPDx.lik=NPDx.lik)
+    NPDx.comb <- lapply(NPDx, function(x) !x) # don't incorporate confidence actually... err towards excluding more
+
+    Rem.Mask <- Reduce('&',NPDx.comb)
+
+    return(Rem.Mask)
+  }
+}
+
+insert.BraakCERAD <- function(patientSample,BraakCERAD){
+  # this function takes the logical opposite of the mask generated by exclude.dz, specifically for AD, and 
+  # replaces all Alzheimer's mentions in NPDx to correspond only to Braak-CERAD criteria
+  # this involves:
+  # - removing AD diagnoses when patients don't meet Braak-CERAD criteria
+  # - shifting other diagnoses up, i.e. if you delete NPDx1, make NPDx2 the new NPDx1
+  # - adding AD diagnoses to NPDx1 if patients meet Braak-CERAD criteria
+  # - shifting other diagnoses back, i.e. if you add AD to NPDx1, make old NPDx1 the new NPDx2
+  # - move existing AD diagnoses to NPDx1
+
+  n.dx <- 4
+  NPDx <- sapply(1:(n.dx+1), function(n) paste('NPDx',n,sep=''))
+  dz.swap <- 'Alzheimer\'s disease'
+  # allow for new likelihood level "Braak-CERAD"
+  #levels(patientSample$NPDx1Likelihood) <- c(levels(patientSample$NPDx1Likelihood),'Braak-CERAD')
+  # convert all NPDx columns to characters because I hate factors
+  for(NPDx.i in NPDx){
+    patientSample[,NPDx.i] <- as.character(patientSample[,NPDx.i])
+    patientSample[,paste(NPDx.i,'Likelihood',sep='')] <- as.character(patientSample[,paste(NPDx.i,'Likelihood',sep='')])
+  }
+
+  for(i in 1:nrow(patientSample)){ # iterate through each patient
+    # find which NPDx houses AD diagnosis
+    pt.dx <- sapply(1:n.dx, function(n) as.character(get(NPDx[n],patientSample[i,])))
+    pt.lik <- sapply(1:n.dx, function(n) as.character(get(paste(NPDx[n],'Likelihood',sep=''),patientSample[i,])))
+    AD.idx <- which(pt.dx == dz.swap) # if empty nothing happens... means pt doesn't have AD
+    if(length(AD.idx) > 1){print('AD.idx > 2');break} # two identical diagnoses
+    if(!BraakCERAD[i] & !is_empty(AD.idx)){ 
+      # remove AD diagnoses when patients don't meet Braak-CERAD criteria      
+      # by shifting other diagnoses up
+      print(paste('Deleting AD diagnosis from patient',i))
+      for(dx in AD.idx:n.dx){
+        patientSample[i,NPDx[dx]] <- pt.dx[dx+1]
+        patientSample[i,paste(NPDx[dx],'Likelihood',sep='')] <- pt.lik[dx+1]
+      }
+      new.pt.dx <- sapply(1:n.dx, function(n) as.character(get(NPDx[n],patientSample[i,])))
+      new.pt.lik <- sapply(1:n.dx, function(n) as.character(get(paste(NPDx[n],'Likelihood',sep=''),patientSample[i,])))
+      print('Old')
+      print(pt.dx)
+      print(pt.lik)
+      print('New')
+      print(new.pt.dx)
+      print(new.pt.lik)
+
+    } else if(BraakCERAD[i] & is_empty(AD.idx)){
+      # add AD diagnoses to NPDx1 when patients meet Braak-CERAD...shift other dx's back
+      print(paste('Adding AD diagnosis to patient',i))
+      for(dx in n.dx:1){
+        # shift NPDx's back, leaving NPDx1 open
+        patientSample[i,NPDx[dx+1]] <- pt.dx[dx]
+        patientSample[i,paste(NPDx[dx+1],'Likelihood',sep='')] <- pt.lik[dx]
+      }
+      patientSample[i,'NPDx1'] <- dz.swap # add AD to NPDx1
+      patientSample[i,'NPDx1Likelihood'] <- 'Braak-CERAD'
+
+      new.pt.dx <- sapply(1:n.dx, function(n) as.character(get(NPDx[n],patientSample[i,])))
+      new.pt.lik <- sapply(1:n.dx, function(n) as.character(get(paste(NPDx[n],'Likelihood',sep=''),patientSample[i,])))
+      print('Old')
+      print(pt.dx)
+      print(pt.lik)
+      print('New')
+      print(new.pt.dx)
+      print(new.pt.lik)
+
+    } else if(BraakCERAD[i] & !is_empty(AD.idx)){
+      # move existing AD diagnoses to NPDx1
+      print(paste('Moving existing AD diagnosis within patient',i))
+      # set NPDx1 to existing diagnoses
+      patientSample[i,'NPDx1'] <- dz.swap
+      patientSample[i,'NPDx1Likelihood'] <- 'Braak-CERAD'
+      pt.dx.old <- pt.dx # save old dx list for testing
+      pt.lik.old <- pt.lik
+      pt.dx <- pt.dx[-AD.idx] # remove AD from list of existing diagnoses
+      pt.lik <- pt.lik[-AD.idx] # remove AD from likelihood list
+      for(dx in 1:(n.dx-1)){
+        # set NPDx2 through NPDx(n.dx) equal to other diagnoses
+        patientSample[i,NPDx[dx+1]] <- pt.dx[dx]
+        patientSample[i,paste(NPDx[dx+1],'Likelihood',sep='')] <- pt.lik[dx]
+      }
+      new.pt.dx <- sapply(1:n.dx, function(n) as.character(get(NPDx[n],patientSample[i,])))
+      new.pt.lik <- sapply(1:n.dx, function(n) as.character(get(paste(NPDx[n],'Likelihood',sep=''),patientSample[i,])))
+      print('Old')
+      print(pt.dx.old)
+      print(pt.lik.old)
+      print('New')
+      print(new.pt.dx)
+      print(new.pt.lik)
+    } else if(!BraakCERAD[i] & is_empty(AD.idx)){
+      # if no diagnosis of AD and doesn't meet Braak-CERAD criteria just print
+      print(paste('Not altering diagnoses in patient',i))
+    }
+
+  }
+  return(patientSample)
 }
 
 cluster.count <- function(partition,k){

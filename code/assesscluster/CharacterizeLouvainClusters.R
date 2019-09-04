@@ -7,7 +7,7 @@ source('code/misc/fxns.R')
 source('code/misc/plottingfxns.R')
 
 microSample <- read.csv(paste(params$opdir,'processed/microSample.csv',sep=''))[,-(1:2)] # Get rid of index column and INDDIDs
-patientSample <- read.csv(paste(params$opdir,'processed/patientSample.csv',sep=''))[,-(1:2)] # Get rid of index column and INDDIDs
+patientSample <- read.csv(paste(params$opdir,'processed/patientSampleBraakCERAD.csv',sep=''))[,-(1:2)] # Get rid of index column and INDDIDs
 
 INDDIDs <- read.csv(paste(params$opdir,'processed/microSample.csv',sep=''))[,2]
 
@@ -30,7 +30,7 @@ p2 <- ggplot(data = melted_cormat, aes(x=Var1, y=Var2, fill=value)) +
   scale_y_discrete(labels = pathItems.labels[length(pathItems.labels):1]) + 
   scale_x_discrete(labels = rownames(centroids),expand=c(0,0)) +
   #scale_fill_viridis(option = 'plasma',limits=c(1,5),breaks=c(1:5)) + 
-  scale_fill_gradientn(colours = c('white','#779ecb','#283480'),
+  scale_fill_gradientn(colours = c('white','#779ecb','#283480',"#0D0887"),
     limits=c(1,5),breaks=c(1:5)) +
   theme(axis.text.x = element_text(angle = 90,vjust=0.5,size=6,colour = clusterColors),
         axis.text.y = element_text(size = 6), axis.ticks = element_blank(),
@@ -45,7 +45,7 @@ p2 <- ggplot(data = melted_cormat, aes(x=Var1, y=Var2, fill=value)) +
   scale_y_discrete(labels = pathItems.labels[length(pathItems.labels):1]) + 
   scale_x_discrete(labels = rownames(centroids),expand=c(0,0)) +
   #scale_fill_viridis(option = 'plasma') + 
-  scale_fill_gradientn(colours = c('white','#779ecb','#283480')) +
+  scale_fill_gradientn(colours = c('white','#779ecb','#283480','#0D0887')) +
   theme(axis.text.x = element_text(angle = 90,vjust=0.5,size=6,colour = clusterColors),
         axis.text.y = element_text(size = 6), axis.ticks = element_blank(),
         legend.position = 'none')
@@ -64,11 +64,10 @@ save(centroids,file = paste(savedir,'Fig2d_SourceData.RData',sep=''))
 
 list[patientSample,dz.short]<- other.dz(patientSample)
 
-p.k.dz <- plot.dz.by.cluster(patientSample$NPDx1,partition,dz.short,clusterColors,'Primary\nHistopathologic Diagnosis')
+list[p.k.dz,df.plt] <- plot.dz.by.cluster(patientSample$NPDx1,partition,dz.short,clusterColors,'Primary\nHistopathologic Diagnosis')
 ggsave(filename = paste(savedir,'ClustersByPrimaryDiseaseLouvain.pdf',sep=''),plot = p.k.dz,
        height = 2,width=3,units='in')
-NPDx1.sd <- patientSample$NPDx1
-save(NPDx1.sd,partition,file = paste(savedir,'Fig2e_SourceData.RData',sep=''))
+save(df.plt,file = paste(savedir,'Fig2e_SourceData.RData',sep=''))
 
 # now isolate AD patients and plot by secondary diagnoses
 AD.mask <- patientSample$NPDx1 == 'Alzheimer\'s disease'
@@ -76,13 +75,11 @@ partition.AD <- partition[AD.mask]
 patientSample.AD <- patientSample[AD.mask,]
 patientSample.AD$NPDx2 <- as.character(patientSample.AD$NPDx2)
 patientSample.AD$NPDx2[patientSample.AD$NPDx2 == ''] <- 'None' # label empty NPDx2 as none
-patientSample.AD$NPDx2[patientSample.AD$NPDx2 == 'Alzheimer\'s disease'] <- 'None' # if NPDx1 is AD then NPDx2 being AD is redundant
 patientSample.AD$NPDx2[grep('Lewy',patientSample.AD$NPDx2)] <- 'LBD'
 list[patientSample.AD,dz.short.AD]<- other.dz(patientSample.AD,NPDx='NPDx2')
-p.k.dz2 <- plot.dz.by.cluster(patientSample.AD$NPDx2,partition.AD,dz.short.AD,clusterColors,'Secondary\nHistopathologic Diagnosis')
+list[p.k.dz2,df.plt] <- plot.dz.by.cluster(patientSample.AD$NPDx2,partition.AD,dz.short.AD,clusterColors,'Secondary\nHistopathologic Diagnosis')
 
-NPDx2.sd <- patientSample.AD$NPDx2
-save(NPDx2.sd,partition.AD,file = paste(savedir,'Fig2f_SourceData.RData',sep=''))
+save(df.plt,file = paste(savedir,'Fig2f_SourceData.RData',sep=''))
 
 ############################
 ### Diagnoses by cluster ###

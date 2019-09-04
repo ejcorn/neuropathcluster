@@ -3,6 +3,7 @@ homedir <- params$homedir
 setwd(homedir)
 savedir <- paste(params$opdir,'processed/',sep='')
 dir.create(savedir,recursive=TRUE)
+source('code/misc/fxns.R')
 
 ################################
 ### Load and Preprocess Data ###
@@ -171,12 +172,32 @@ for(NPdx.i in NPDx.all){
   
 }
 
+# there is one patient who has Alzheimer's listed as NPDx1 and NPDx2
+DoubleDx <- 120215
+patients$NPDx2[which(patients$INDDID == DoubleDx)] <- ''
+patients$NPDx2Likelihood[which(patients$INDDID == DoubleDx)] <- ''
+
 # process Braak scores. Braak03 = floor(Braak06/2) for those without Braak03
 patients$Braak03 <- as.numeric(patients$Braak03)
 patients$Braak06 <- as.numeric(patients$Braak06)
 patients$Braak03[is.na(patients$Braak03)] <- floor(patients$Braak06[is.na(patients$Braak03)]/2)
 
 write.csv(x = patients,file = paste(savedir,"patientSample.csv",sep=''))
+
+# Replace Alzheimer's disease with Braak-CERAD scores
+
+dz.exc <- 'Alzheimer\'s disease'
+n.dx <- 4
+Rem.Mask <- exclude.dz(patients,dz.exc,n.dx) # get mask for all patients meeting Braak-CERAD AD
+
+BraakCERAD <- !Rem.Mask
+patients <- insert.BraakCERAD(patients,BraakCERAD)
+
+print('Alzheimers in NPDx1 is equal to BraakCERAD mask?')
+print(identical(patients$NPDx1 == dz.exc,BraakCERAD))
+
+write.csv(x = patients,file = paste(savedir,"patientSampleBraakCERAD.csv",sep=''))
+
 # visualize representation of diseases
 p <- ggplot(data = patients,aes(x=NPDx1,fill=NPDx1)) + geom_hline(yintercept = 100,color ='grey')+ 
   geom_bar() + theme_classic() +

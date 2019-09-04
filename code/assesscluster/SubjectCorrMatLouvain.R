@@ -7,7 +7,7 @@ source('code/misc/fxns.R')
 source('code/misc/plottingfxns.R')
 
 microSample <- read.csv(paste(params$opdir,'processed/microSample.csv',sep=''))[,-(1:2)] # Get rid of index column and INDDIDs
-patientSample <- read.csv(paste(params$opdir,'processed/patientSample.csv',sep=''))[,-(1:2)] # Get rid of index column and INDDIDs
+patientSample <- read.csv(paste(params$opdir,'processed/patientSampleBraakCERAD.csv',sep=''))[,-(1:2)] # Get rid of index column and INDDIDs
 
 INDDIDs <- read.csv(paste(params$opdir,'processed/microSample.csv',sep=''))[,1]
 
