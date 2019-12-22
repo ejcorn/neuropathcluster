@@ -19,16 +19,8 @@ if(sum((colSums(is.na(microSample)) == nrow(microSample))) > 0){
 ### Load data ###
 #################
 
-pathItems.type <- fliplr(list("NeuronLoss","Gliosis","Angiopathy","Ubiquitin","Thio","TDP43","Tau","Syn","Antibody"))
-pathItems.index <- sapply(1:length(pathItems.type), function(i) grep(pathItems.type[[i]], colnames(microSample)))
-# find missing feature categories
-pathItems.type <- pathItems.type[lapply(pathItems.index,length)>0]
-pathItems.index <- pathItems.index[lapply(pathItems.index,length)>0]
-pathItems.labels <- sapply(1:length(pathItems.type), function(i) c(matrix("",floor(0.5*length(pathItems.index[[i]]))),
-                                                                   pathItems.type[[i]], c(matrix("",ceiling(0.5*length(pathItems.index[[i]])-1)))))
-pathItems.index <- Reduce(c,pathItems.index)
-pathItems.labels <- Reduce(c,pathItems.labels)
-
+pathItems.type <- c("NeuronLoss","Gliosis","Angiopathy","Ubiquitin","Thio","TDP43","Tau","Syn","Antibody")
+list[pathItems.index,pathItems.labels] <- get.feature.labels(pathItems.type,colnames(microSample))
 # order microSample columns to appear in Fig. 4d displaying cluster centroids
 microSample <- microSample[,pathItems.index]
 

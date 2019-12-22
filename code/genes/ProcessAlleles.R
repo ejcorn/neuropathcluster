@@ -21,10 +21,8 @@ if(sum(duplicated(INDDIDs))){
 
 load(file = paste(params$resultsdir,'analyzecluster/subjLouvainPartitionReordered.RData',sep=''))
 INDDIDs <- remove.Disconnected.Subjects(INDDIDs,DisconnectedSubjects)
-if(!is_empty(DisconnectedSubjects)){
-  microSample <- microSample[-DisconnectedSubjects,]
-  patientSample <- patientSample[-DisconnectedSubjects,]
-}
+microSample <- remove.Disconnected.Subjects(microSample,DisconnectedSubjects)
+patientSample <- remove.Disconnected.Subjects(patientSample,DisconnectedSubjects)
 
 #################
 ### Gene data ###

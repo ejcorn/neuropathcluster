@@ -13,10 +13,8 @@ INDDIDs <- read.csv(paste(params$opdir,'processed/microSample.csv',sep=''))[,2]
 
 load(file = paste(params$resultsdir,'analyzecluster/subjLouvainPartitionReordered.RData',sep=''))
 
-if(!is_empty(DisconnectedSubjects)){
-  microSample <- microSample[-DisconnectedSubjects,]
-  patientSample <- patientSample[-DisconnectedSubjects,]
-}
+microSample <- remove.Disconnected.Subjects(microSample,DisconnectedSubjects)
+patientSample <- remove.Disconnected.Subjects(patientSample,DisconnectedSubjects)
 
 ######################
 ### Plot centroids ###

@@ -13,10 +13,8 @@ INDDIDs <- read.csv(paste(params$opdir,'processed/microSample.csv',sep=''))[,2]
 
 load(file = paste(params$resultsdir,'analyzecluster/subjLouvainPartitionReordered.RData',sep=''))
 
-if(!is_empty(DisconnectedSubjects)){
-  microSample <- microSample[-DisconnectedSubjects,]
-  patientSample <- patientSample[-DisconnectedSubjects,]
-}
+microSample <- remove.Disconnected.Subjects(microSample,DisconnectedSubjects)
+patientSample <- remove.Disconnected.Subjects(patientSample,DisconnectedSubjects)
 
 demo <- read.csv(paste(homedir,'data/INDD_GlobalDemographics6819.csv',sep=''))
 
@@ -99,12 +97,20 @@ ggsave(filename = paste(savedir,'MissingFeaturesByCluster.pdf',sep=''),plot = p,
 pathItems.type <- list("NeuronLoss","Gliosis","Angiopathy","Ubiquitin","Thio","TDP43","Tau","Syn","Antibody")
 pathItems.prettylab <- list("Neuron Loss","Gliosis","Angiopathy","Ubiquitin","Neuritic Plaques","TDP-43","Tau","Synuclein","Amyloid-beta")
 pathItems.index <- sapply(1:length(pathItems.type), function(i) grep(pathItems.type[[i]], colnames(microSample)))
+missing.feat.mask <- lapply(pathItems.index,length) == 0 # find feature types that have been entirely removed
+
+# remove missing feature classes
+pathItems.type <- pathItems.type[!missing.feat.mask]
+pathItems.prettylab <- pathItems.prettylab[!missing.feat.mask]
+pathItems.index <- pathItems.index[!missing.feat.mask]
 nfeats <- length(pathItems.index)
 
-missingdata <- lapply(pathItems.index, function(P) rowMeans(is.na(microSample[,P]))*100)
+# compute percentage of missing features within each feature type
+missingdata <- lapply(pathItems.index, function(P) rowMeans(is.na(microSample[,P,drop=FALSE]))*100)
 names(missingdata) <- pathItems.prettylab
 missingdata <- do.call('cbind',missingdata)
 
+# construct data frame containing missing features, cluster labels, and feature types
 df <- data.frame(g=rep(sapply(partition, function(i) paste('Cluster',i)),ncol(missingdata)),
                  y = as.vector(as.matrix(missingdata)),
                  x=rep(colnames(missingdata),each = length(partition)),
@@ -139,3 +145,4 @@ pdf.options(reset = TRUE, onefile = FALSE)
 pdf(file = paste(savedir,'/MissingFeaturesByClusterByTypeJitterPairwiseWilcox.pdf',sep=''),height = unit(9,'in'),width=unit(9,'in'),useDingbats = F)
 plot(ggplot_gtable(p)) #+ scale_y_continuous(limits=c(0,ymax))
 dev.off()
+

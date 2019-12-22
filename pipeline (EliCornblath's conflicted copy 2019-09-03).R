@@ -8,9 +8,9 @@ setwd(homedir)
 
 # list of prespecified variables
 params <- list(missing.thrsh.r=0.75,
-               missing.thrsh.c=0.3,
-               extralab='_122219',
-               gamma.opt=1.6,
+               missing.thrsh.c=0.,
+               extralab='allpts_final',
+               gamma.opt=1.7,
                nreps_gammasweep=1000, # set number of reps for gamma sweep
                homedir=homedir,
                matlab.path='/Applications/MATLAB_R2019a.app/bin/matlab', # path to matlab binary
@@ -41,9 +41,9 @@ source('code/preprocess/demographics.R') # analyze demographics (age)
 ###########################
 
 # data-driven analysis of copathology
-source('code/copath/NeuropathCovariance_v4.R') # dependent on all features initially available
-source('code/copath/CopathIndiv.R') # dependent on all features initially available
-source('code/copath/CellularMolecular.R') # dependent on all features initially available
+source('code/copath/NeuropathCovariance_v4.R')
+source('code/copath/CopathIndiv.R')
+source('code/copath/CellularMolecular.R')
 
 ########################
 ### Cluster Patients ###

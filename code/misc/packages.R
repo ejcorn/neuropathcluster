@@ -1,6 +1,6 @@
 library(R.matlab)
 library(reshape2)
-library(tidyverse)
+library(purrr)
 library(viridis)
 library(RColorBrewer)
 library(brainwaver)

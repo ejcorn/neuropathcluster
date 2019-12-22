@@ -384,11 +384,43 @@ flexdim.rowmask <- function(X,mask){
   }
 }
 
-lm.boot <- function(data,indices){
-  data <- data[indices,]
-  m <- lm(y~.,data=data)
-  coefficients(m)[-1]
+#################################################
+### Making labels for plots of feature values ###
+#################################################
+
+library(gsubfn)
+
+get.feature.labels <- function(features.of.interest,all.features){
+  # INPUTS:
+  # features.of.interest: vector of character names of feature categories that are substrings of feature names
+  # all.features: vector of all feature names (here, regional pathology scores, colnames(microSample))
+
+  # OUTPUTS:
+  # idx: integer vector to order features
+  # labels: character vector with axis tick labels for pretty plotting
+  features.of.interest <- rev(as.list(features.of.interest))
+  idx <- sapply(1:length(features.of.interest), function(i) grep(features.of.interest[[i]], all.features))
+  # remove missing feature categories
+  features.of.interest <- features.of.interest[lapply(idx,length)>0]
+  idx <- idx[lapply(idx,length)>0]
+  labels <- list()
+  for(i in 1:length(features.of.interest)){
+    if(length(idx[[i]]) > 1){ # if multiple features in category, center label and pad with blanks
+      labels[[i]] <- c(matrix("",floor(0.5*length(idx[[i]]))),features.of.interest[[i]], c(matrix("",ceiling(0.5*length(idx[[i]])-1))))
+    }
+    if(length(idx[[i]])==1){ # if only 1 feature in category, place category label on that item
+      labels[[i]] <- features.of.interest[[i]]
+    }
+  }
+  idx <- Reduce(c,idx)
+  labels <- Reduce(c,labels)
+  return(list(idx=idx,labels=labels))
 }
+
+
+####################################
+### Cluster processing functions ###
+####################################
 
 remove.Disconnected.Subjects <- function(X,DisconnectedSubjects){
   if(!is.null(ncol(X))){
@@ -531,6 +563,15 @@ disconnect.small.clusters <- function(partition){
   }
 }
 
+###############################
+### Bootstrapping functions ###
+###############################
+
+lm.boot <- function(data,indices){
+  data <- data[indices,]
+  m <- lm(y~.,data=data)
+  coefficients(m)[-1]
+}
 
 boot.reg <- function(df,nboot){
   # bootstrap linear regression to test whether coefficients for all predictors
