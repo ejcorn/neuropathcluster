@@ -6,7 +6,7 @@ dir.create(savedir,recursive=T)
 source('code/misc/fxns.R')
 source('code/misc/trainfxns.R')
 source('code/misc/plottingfxns.R')
-patientSample <- read.csv(paste(params$opdir,'processed/patientSample.csv',sep=''))[,-(1:2)] # Get rid of index column and INDDIDs
+patientSample <- read.csv(paste(params$opdir,'processed/patientSample.csv',sep=''),stringsAsFactors=F)[,-(1:2)] # Get rid of index column and INDDIDs
 
 ##################
 ### Make plots ###

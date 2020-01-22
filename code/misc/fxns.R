@@ -115,11 +115,24 @@ CramerV.GOF<-function(X2.output){
 }
 
 other.dz <- function(patientSample,NPDx = 'NPDx1'){
-  # group together diseases with very low representation
+  # INPUTS:
+  # patientSample: dataframe with NPDx columns
+  # NPDx: character name of which NPDx column
+  #
+  # group together diseases with very low representation into two categories:
+  # 'Tau-Other': miscellaneous, unclassified tauopathies
+  # 'Other': everything else
+  
   # make short names for diseases for plotting
-  other <- list('Argyrophilic grain disease','Down\'s syndrome','Schizophrenia',
-              'Pathological Aging','Tauopathy unclassifiable','FTLD-Other','LATE',
-              'Cerebrovascular Disease','CAA','Tauopathy, unclassifiable','','Hippocampal Sclerosis','CTE')
+
+  other.tau <- list('Argyrophilic grain disease','Tauopathy unclassifiable',
+              'Tauopathy, unclassifiable','CTE','PART')
+  for(O in other.tau){
+    patientSample[,NPDx][patientSample[,NPDx] == O] <- 'Tau-Other'
+  }
+  other <- list('Down\'s syndrome','Schizophrenia',
+              'Pathological Aging','FTLD-Other','LATE',
+              'Cerebrovascular Disease','CAA','','Hippocampal Sclerosis','CTE')
   for(O in other){
     patientSample[,NPDx][patientSample[,NPDx] == O] <- 'Other'
   }
@@ -134,18 +147,19 @@ other.dz <- function(patientSample,NPDx = 'NPDx1'){
   long.short.list[['LBD']] <- 'LBD'
   long.short.list[['Multiple System Atrophy']] <- 'MSA'
   long.short.list[['Other']] <- 'Oth'
-  long.short.list[['Parkinson\'s disease']] <- 'PD'
+  #long.short.list[['Parkinson\'s disease']] <- 'PD'
   long.short.list[['Pick\'s disease']] <- 'PiD'
   long.short.list[['PART']] <- 'PART'
   long.short.list[['PSP']] <- 'PSP'
   #long.short.list[['FTLD-Other']] <- 'FTLD-Other'
-  long.short.list[['Unremarkable adult']] <- 'UA'
+  #long.short.list[['Unremarkable adult']] <- 'UA'
 
   # diseases added for NPDx2
   #long.short.list[['Hippocampal Sclerosis']] <- 'HC Scl.'
   long.short.list[['Lewy body disease, Amygdala-predominant']] <- 'LBD'
   long.short.list[['Lewy body pathology unclassifiable']] <- 'LBD'
   long.short.list[['None']] <- 'None'
+  long.short.list[['Tau-Other']] <- 'T-O'
 
   # diseases present in NPDx
   dz.pres <- sort(unique(as.character(patientSample[,NPDx])))

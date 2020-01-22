@@ -12,7 +12,7 @@ microSample <- read.csv(paste(params$opdir,'processed/microSample.csv',sep=''),s
 patientSample <- read.csv(paste(params$opdir,'processed/patientSample.csv',sep=''),stringsAsFactors = F)[,-(1:2)] # Get rid of index column and INDDIDs
 load(file = paste0(params$opdir,'micekmeans/microSampleImputedmiceRF.RData'))
 
-INDDIDs <- read.csv(paste(params$opdir,'processed/microSample.csv',sep=''))[,2]
+INDDIDs <- read.csv(paste(params$opdir,'processed/microSample.csv',sep=''),stringsAsFactors=F)[,2]
 
 #######################
 ### factor analysis ###

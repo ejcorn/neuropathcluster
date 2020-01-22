@@ -7,10 +7,10 @@ source('code/misc/fxns.R')
 source('code/misc/trainfxns.R')
 source('code/misc/plottingfxns.R')
 
-microSample <- read.csv(paste(params$opdir,'processed/microSample.csv',sep=''))[,-(1:2)] # Get rid of index column and INDDIDs
-patientSample <- read.csv(paste(params$opdir,'processed/patientSample.csv',sep=''))[,-(1:2)] # Get rid of index column and INDDIDs
+microSample <- read.csv(paste(params$opdir,'processed/microSample.csv',sep=''),stringsAsFactors=F)[,-(1:2)] # Get rid of index column and INDDIDs
+patientSample <- read.csv(paste(params$opdir,'processed/patientSample.csv',sep=''),stringsAsFactors=F)[,-(1:2)] # Get rid of index column and INDDIDs
 
-INDDIDs <- read.csv(paste(params$opdir,'processed/microSample.csv',sep=''))[,2]
+INDDIDs <- read.csv(paste(params$opdir,'processed/microSample.csv',sep=''),stringsAsFactors=F)[,2]
 
 if(sum(duplicated(INDDIDs))){
   break

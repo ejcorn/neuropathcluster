@@ -5,10 +5,10 @@ savedir <- paste(params$resultsdir,'copath/',sep='')
 dir.create(savedir,recursive=T)
 source('code/misc/fxns.R')
 source('code/misc/plottingfxns.R')
-microSample <- read.csv(paste(params$opdir,'processed/microSample.csv',sep=''))[,-(1:2)] # Get rid of index column and INDDIDs
-patientSample <- read.csv(paste(params$opdir,'processed/patientSample.csv',sep=''))[,-(1:2)] # Get rid of index column and INDDIDs
+microSample <- read.csv(paste(params$opdir,'processed/microSample.csv',sep=''),stringsAsFactors=F)[,-(1:2)] # Get rid of index column and INDDIDs
+patientSample <- read.csv(paste(params$opdir,'processed/patientSample.csv',sep=''),stringsAsFactors=F)[,-(1:2)] # Get rid of index column and INDDIDs
 
-INDDIDs <- read.csv(paste(params$opdir,'processed/microSample.csv',sep=''))[,1]
+INDDIDs <- read.csv(paste(params$opdir,'processed/microSample.csv',sep=''),stringsAsFactors=F)[,1]
 #microSample <- as.data.frame(scale(microSample,center = T))
 if(sum((colSums(is.na(microSample)) == nrow(microSample))) > 0){
   break

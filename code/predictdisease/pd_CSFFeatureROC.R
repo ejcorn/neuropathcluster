@@ -6,7 +6,7 @@ dir.create(savedir,recursive=T)
 source('code/misc/fxns.R')
 source('code/misc/trainfxns.R')
 
-INDDIDs <- read.csv(paste(params$opdir,'processed/microSample.csv',sep=''))[,2]
+INDDIDs <- read.csv(paste(params$opdir,'processed/microSample.csv',sep=''),stringsAsFactors=F)[,2]
 
 #################
 ### Load data ###

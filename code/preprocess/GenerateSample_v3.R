@@ -201,9 +201,11 @@ for(NPdx.i in NPDx.all){
   patients[,NPdx.i][which(grepl("Chronic Traumatic Encephalopathy",patients[,NPdx.i]))] <- "CTE"  
   patients[,NPdx.i][which(grepl("supranuclear",patients[,NPdx.i]))] <- "PSP"
   
-  patients[,NPdx.i][which(grepl("dementia with Lewy",patients[,NPdx.i]))] <- "LBD"
-  patients[,NPdx.i][which(grepl("Parkinson's disease dementia",patients[,NPdx.i]))] <- "LBD" #"Parkinson's Disease Dementia"
-  patients[,NPdx.i][which(grepl("Parkinson's disease",patients[,NPdx.i]))] <- "Parkinson's disease"
+  patients[,NPdx.i][which(grepl("Lewy body disease",patients[,NPdx.i]))] <- "LBD"
+  # per JR and Eddie Lee's emails on 1-21-20, group together all lewy body disease into one
+  # patients[,NPdx.i][which(grepl("dementia with Lewy",patients[,NPdx.i]))] <- "LBD"
+  # patients[,NPdx.i][which(grepl("Parkinson's disease dementia",patients[,NPdx.i]))] <- "LBD"
+  # patients[,NPdx.i][which(grepl("Parkinson's disease",patients[,NPdx.i]))] <- "Parkinson's disease"
   
   patients[,NPdx.i][which(grepl("PPA",patients[,NPdx.i]))] <- "PPA"
   patients[,NPdx.i][which(grepl("amyloid angiopathy",patients[,NPdx.i]))] <- "CAA"

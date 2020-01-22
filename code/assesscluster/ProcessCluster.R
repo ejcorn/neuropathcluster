@@ -5,10 +5,10 @@ savedir <- paste(params$resultsdir,'analyzecluster/',sep='')
 dir.create(savedir,recursive=T)
 source('code/misc/fxns.R')
 
-microSample <- read.csv(paste(params$opdir,'processed/microSample.csv',sep=''))[,-(1:2)] # Get rid of index column and INDDIDs
-patientSample <- read.csv(paste(params$opdir,'processed/patientSample.csv',sep=''))[,-(1:2)] # Get rid of index column and INDDIDs
+microSample <- read.csv(paste(params$opdir,'processed/microSample.csv',sep=''),stringsAsFactors=F)[,-(1:2)] # Get rid of index column and INDDIDs
+patientSample <- read.csv(paste(params$opdir,'processed/patientSample.csv',sep=''),stringsAsFactors=F)[,-(1:2)] # Get rid of index column and INDDIDs
 
-INDDIDs <- read.csv(paste(params$opdir,'processed/microSample.csv',sep=''))[,2]
+INDDIDs <- read.csv(paste(params$opdir,'processed/microSample.csv',sep=''),stringsAsFactors=F)[,2]
 #microSample <- as.data.frame(scale(microSample,center = T))
 if(sum((colSums(is.na(microSample)) == nrow(microSample))) > 0){
   break
