@@ -33,16 +33,13 @@ gamma.rng <- round(cl.data$gamma.rng*10) /10 # doubles got saved with 1e-16 erro
 partition <- partitions.by.gamma[,which(gamma.rng == gamma.opt)]
 
 DisconnectedSubjects <- cl.data$DisconnectedSubjects
-if(!is_empty(DisconnectedSubjects)){
-  microSample <- microSample[-DisconnectedSubjects,]
-}
+microSample <- remove.Disconnected.Subjects(microSample,DisconnectedSubjects)
 
 ############################
 ### Annex small clusters ###
 ############################
 
-thrsh <- 0.01 # if cluster is < 1% of sample, annex it to another cluster
-k <- max(partition)
+thrsh <- 0.02 # if cluster is < 1% of sample, annex it to another cluster
 
 cluster.counts.by.gamma <- lapply(1:ncol(partitions.by.gamma), function(i)
   sapply(1:max(partitions.by.gamma[,i]), function(k.i) sum(partitions.by.gamma[,i]==k.i)))
@@ -50,7 +47,11 @@ names(cluster.counts.by.gamma) <- as.character(gamma.rng)
 centroids <- compute.centroids(microSample,partition)
 
 partition <- annex.small.clusters(partition,X = microSample,centroids = centroids,thrsh = thrsh)
+DisconnectedSubjects <- c(DisconnectedSubjects,which(is.na(partition)))
+partition <- partition[!is.na(partition)] # remove disconnected subjects
 #list[partition,DisconnectedSubjects] <- disconnect.small.clusters(partition)
+
+microSample <- remove.Disconnected.Subjects(microSample,DisconnectedSubjects)
 partition <- remove.Partition.Gap(partition)
 centroids <- compute.centroids(microSample,partition)
 

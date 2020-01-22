@@ -6,7 +6,8 @@ homedir = '~/Dropbox/Neurodegeneration/PathCogClinDx/neuropathcluster/code/plot_
 addpath(genpath(basedir));
 %% Plot schematic indicating which brain regions were sampled
 
-indices = [1:6,109:112,114:115,234:237]';
+%indices = [1:6,109:112,114:115,234:237]';
+indices = [1,3:6,109:112,114:115,234:237]'; % after removing occipital cortex
 load(fullfile(homedir,'schematic/regioncolors.mat'))
 f=plot_subcortvol3schem(indices,roi_colors);
 f.PaperUnits = 'inches';

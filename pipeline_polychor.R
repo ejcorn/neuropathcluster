@@ -9,8 +9,8 @@ setwd(homedir)
 # list of prespecified variables
 params <- list(missing.thrsh.r=0.2,
                missing.thrsh.c=0,
-               extralab='_122519',
-               dist.met='spearman', # distance metric for modularity maximization
+               extralab='_010320',
+               dist.met='polychoric', # distance metric for modularity maximization
                gamma.opt=6,
                nreps_gammasweep=1000, # set number of reps for gamma sweep
                homedir=homedir,
@@ -41,27 +41,38 @@ source('code/preprocess/demographics.R') # analyze demographics (age)
 ### Cluster Patients ###
 ########################
 
-source('code/clustering/PrepDataCluster.R')
-source('code/clustering/runGammaSweepMATLAB_R.R')
-sampfrac <- 0.5
-source('code/clustering/runSplitReliabilityMATLAB_R.R')
+source('code/clustering/PrepDataCluster.R') # compute polychoric correlation matrix... time consuming
+source('code/kmeans/pam.R')
+
+# modularity maximization
+if(params$gamma.opt < 2){
+  source('code/clustering/runGammaSweepMATLAB_R.R')
+  sampfrac <- 0.5
+  source('code/clustering/runSplitReliabilityMATLAB_R.R')
+  source('code/assesscluster/ProcessCluster.R') # make sure clusters are in same order every time
+}
+
+######################################################################
+### Perform expl. factor analysis on polychoric correlation matrix ###
+######################################################################
+
+source('code/kmeans/Decomposition.R')
+
+source('code/kmeans/umap_cluster.R')
 
 #########################
 ### Assess clustering ###
 #########################
 
-# make sure clusters are in same order every time
-source('code/assesscluster/ProcessCluster.R')
 source('code/assesscluster/CharacterizeLouvainClusters.R')
+source('code/assesscluster/ClinicalDxByCluster.R')
 source('code/assesscluster/SubjectCorrMatLouvain.R')
 source('code/assesscluster/AgeMissingDataByCluster.R')
-
-sampfrac <- 0.5
-source('code/assesscluster/LouvainSplitReliability.R')
-source('code/plot_brains/prep_centroid_plots.R')
-source('code/plot_brains/runPlotBrainsMATLAB_R.R')
-
 source('code/assesscluster/ADLBDClusterivsClusterj.R')
+source('code/assesscluster/SimilarityByClusterVsDisease.R')
+source('code/assesscluster/ClusterPathologyDistribution.R')
+source('code/assesscluster/ClustersPathSpace.R')
+
 ########################################
 ### Cognition, Genes, CSF by cluster ###
 ########################################
@@ -86,6 +97,12 @@ source('code/cogcsf/CSFByClusterOutliersExcludeDisease.R') # ensure CSF analysis
 source('code/genes/AlleleProportionsByClusterExcludeDisease.R')
 source('code/genes/AllelesByClusterExcludeDisease.R')
 
+dz.exc <- 'Alzheimer\'s disease'
+exc.cl <- 5
+n.dx <- 4
+source('code/genes/AlleleProportionsByClusterExcludeDisease.R')
+source('code/genes/AllelesByClusterExcludeDisease.R')
+
 dz.exc <- 'PSP'
 exc.cl <- 1
 n.dx <- 4
@@ -106,18 +123,8 @@ source('code/genes/AllelesByClusterIsolateDisease.R')
 ### Predict disease labels ###
 ##############################
 
-# GLM
-extralabs <- c('CSFOnly')#,'GeneOnly','CSFGene')
-for(extralab in extralabs){
-  source('code/predictdisease/pd_prepdata.R')
-  source('code/predictdisease/pd_traintestglm.R')
-  source('code/predictdisease/pd_plotperfglm.R')
-  source('code/predictdisease/pd_plotfeatureweightsglm.R')
-}
-
 # GLM -- comparing to overlapping traditional diagnoses
-
-extralabs <- c('CSFOnlyMMSE','CSFOnlyAddNormal')
+extralabs <- c('CSFOnlyAddNormalMMSE')
 for(extralab in extralabs){
   source('code/predictdisease/pd_prepdata_alldx.R') # construct data frame allowing for overlap in traditional dx
   source('code/predictdisease/pd_traintestglm.R')
@@ -126,9 +133,9 @@ for(extralab in extralabs){
 }
 
 # random forest
-extralabs <- c('CSFGene')#,'CSFOnly','GeneOnly')
+extralabs <- c('CSFOnlyAddNormalMMSE')#,'CSFOnly','GeneOnly')
 for(extralab in extralabs){
-  source('code/predictdisease/pd_prepdata.R')
+  source('code/predictdisease/pd_prepdata_alldx.R')
   source('code/predictdisease/pd_traintestrf.R')
   source('code/predictdisease/pd_plotperfrf.R')
   source('code/predictdisease/pd_plotfeatureweightsrf.R')

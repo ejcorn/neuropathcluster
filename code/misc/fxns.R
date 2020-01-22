@@ -1,3 +1,26 @@
+c.names <- function(x,xnames){
+  # INPUTS:
+  # x: vector
+  # xnames: names for each element of x
+  #
+  # OUTPUT:
+  # x with xnames as element names
+  #
+  # like the c() function but allows names in one line
+  
+  names(x) <- xnames
+  return(x)
+}
+unit.test <- function(test,pass,fail){
+  # test: logical expression to evaluate
+  # pass: error to print if true
+  # fail: error to print if false
+  if(test){
+    print(pass)
+  } else{print(fail)}
+
+}
+
 normalize.ab <- function(x,a,b){
   # scale any vector x between a and b
   x <- (b-a)*(x-min(x))/(max(x)-min(x)) + a
@@ -25,9 +48,11 @@ roundDownToMultiple <- function(n,k){
 }
 
 fliplr <- function(x){
-  x <- x[length(x):1]
+  if(is.null(dim(x))){x <- x[length(x):1]}
+  else if(length(dim(x))>1){x <- x[,ncol(x):1]}
   return(x)
 }
+
 
 fisher.r.to.z <- function(r){
   r <- 0.5*(log(1+r) - log(1-r))
@@ -78,12 +103,23 @@ substrRight <- function(x, n){
   substr(x, nchar(x)-n+1, nchar(x))
 }
 
+CramerV.GOF<-function(X2.output){
+  
+  # INPUTS:
+  # X2.output: chisq.test output list from a goodness of fit (one sample) test
+  # 
+  # OUTPUT:
+  # cramer V statistic: sqrt(X2/(df*n_observations))
+  
+  return(sqrt(X2.output$statistic/ (sum(X2.output$observed)*(length(X2.output$observed)-1)) ))
+}
+
 other.dz <- function(patientSample,NPDx = 'NPDx1'){
   # group together diseases with very low representation
   # make short names for diseases for plotting
   other <- list('Argyrophilic grain disease','Down\'s syndrome','Schizophrenia',
-              'Pathological Aging','Tauopathy unclassifiable','FTLD-Other',
-              'Cerebrovascular Disease','CAA','PART','Tauopathy, unclassifiable','')
+              'Pathological Aging','Tauopathy unclassifiable','FTLD-Other','LATE',
+              'Cerebrovascular Disease','CAA','Tauopathy, unclassifiable','','Hippocampal Sclerosis','CTE')
   for(O in other){
     patientSample[,NPDx][patientSample[,NPDx] == O] <- 'Other'
   }
@@ -93,18 +129,20 @@ other.dz <- function(patientSample,NPDx = 'NPDx1'){
   long.short.list[['Alzheimer\'s disease']] <- 'AD'
   long.short.list[['Amyotrophic Lateral Sclerosis']] <- 'ALS'
   long.short.list[['CBD']] <- 'CBD'
+  long.short.list[['CTE']] <- 'CTE'
   long.short.list[['FTLD-TDP']] <- 'FTLD'
   long.short.list[['LBD']] <- 'LBD'
   long.short.list[['Multiple System Atrophy']] <- 'MSA'
   long.short.list[['Other']] <- 'Oth'
-  long.short.list[['Parkinson\'s disease']] <- 'Pa.D'
-  long.short.list[['Pick\'s disease']] <- 'Pi.D'
+  long.short.list[['Parkinson\'s disease']] <- 'PD'
+  long.short.list[['Pick\'s disease']] <- 'PiD'
+  long.short.list[['PART']] <- 'PART'
   long.short.list[['PSP']] <- 'PSP'
   #long.short.list[['FTLD-Other']] <- 'FTLD-Other'
   long.short.list[['Unremarkable adult']] <- 'UA'
 
   # diseases added for NPDx2
-  long.short.list[['Hippocampal Sclerosis']] <- 'HC Scl.'
+  #long.short.list[['Hippocampal Sclerosis']] <- 'HC Scl.'
   long.short.list[['Lewy body disease, Amygdala-predominant']] <- 'LBD'
   long.short.list[['Lewy body pathology unclassifiable']] <- 'LBD'
   long.short.list[['None']] <- 'None'
@@ -122,13 +160,27 @@ other.clindx <- function(patientSample){
   patientSample$ClinicalDx1 <- as.character(patientSample$ClinicalDx1)
   other <- list('','Down\'s syndrome','Hydrocephalus','Motor neuron disease NOS',
               'Generally Impaired','Primary lateral sclerosis',
-              'Cerebrovascular Disease',
+              'Cerebrovascular Disease','Dementia of undetermined etiology',
               'Posterior Cortical Atrophy','Progressive muscular atrophy','Other (specify)')
   for(O in other){
     patientSample$ClinicalDx1[patientSample$ClinicalDx1 == O] <- 'Other'
   }
-  dz.short <- c('AD','ALS','bvFTD','CBD','DNOS','FTLD','LBD','MCI','MSA','Norm.','Oth','Pa.D','PPA','PSP','Psy.')  
+  dz.short <- c('AD','ALS','bvFTD','CBD','DLB','FTLD','MCI','MSA','UA','Oth','PD','PDD','PPA','PSP','Psy.')  
   return(list(ptsampleother=patientSample,dz.short=dz.short))
+}
+
+grepl.npdx <- function(patientSample,term,n.dx){
+  # INPUTS:
+  # patientSample: dataframe of patient information containing NPDx columns
+  # term: what to search for (character)
+  # n.dx: how many diagnoses to search through
+  #
+  # OUTPUTS:
+  # mask for patients with search term in any of npdx columns
+  NPDx <- sapply(1:n.dx, function(i) paste('NPDx',i,sep=''))
+  NPDx <- lapply(NPDx,function(x) get(x,patientSample))
+  NPDx <- lapply(NPDx,function(X) grepl(term,X))
+  return(Reduce('|',NPDx))
 }
 
 exclude.dz.basic <- function(patientSample,dz.exc,n.dx){
@@ -140,49 +192,6 @@ exclude.dz.basic <- function(patientSample,dz.exc,n.dx){
   return(Rem.Mask)
 }
 
-exclude.dz.old <- function(patientSample,dz.exc,n.dx){
-  # excludes disease based on diagnosis that is > "Low Probability"
-  NPDx <- sapply(1:n.dx, function(i) paste('NPDx',i,sep=''))
-  NPDx <- lapply(NPDx,function(x) get(x,patientSample))
-  NPDx <- lapply(NPDx, function(X) X == dz.exc)  
-
-  if(dz.exc == 'Alzheimer\'s disease'){
-    # find patients with either Braak03 <2 or CERAD < 2 -- these folks don't have real AD    
-    BraakMask <- patientSample$Braak03 < 2 # patients with low Braak scores
-    CERADMask <- patientSample$CERAD < 2 # patients with low CERAD scores
-    missingBraak <- is.na(patientSample$Braak03)
-    missingCERAD <- is.na(patientSample$CERAD)
-    # only look at people with Braak and CERAD scores present
-    BraakMask[missingBraak | missingCERAD] <- FALSE
-    CERADMask[missingBraak | missingCERAD] <- FALSE
-    Rem.Mask <- BraakMask | CERADMask # patients with either low Braak or low CERAD and hence not meeting criteria
-    
-    NPDx.lik <- sapply(1:n.dx, function(i) paste('NPDx',i,'Likelihood',sep=''))
-    NPDx.lik <- lapply(NPDx.lik,function(x) get(x,patientSample))
-    NPDx.lik <- lapply(NPDx.lik, function(X) X != "Possible (Low Probability)")
-    # NOT anyone with non-low probability dx of dz.exc
-    NPDx.comb <- mapply(function(NPDx,NPDx.lik){list(!(NPDx & NPDx.lik))},NPDx=NPDx,NPDx.lik=NPDx.lik)
-
-    Lik.Mask <- Reduce('&',NPDx.comb)
-    # if missing CERAD or Braak, use subjective likelihood
-    Rem.Mask[missingBraak | missingCERAD] <- 
-      Lik.Mask[missingBraak | missingCERAD] 
-    return(Rem.Mask)
-
-  }
-  else{
-    # incorporate subjective confidence for non-AD diagnoses
-    NPDx.lik <- sapply(1:n.dx, function(i) paste('NPDx',i,'Likelihood',sep=''))
-    NPDx.lik <- lapply(NPDx.lik,function(x) get(x,patientSample))
-    NPDx.lik <- lapply(NPDx.lik, function(X) X != "Possible (Low Probability)")
-    # NOT anyone with non-low probability dx of dz.exc
-    NPDx.comb <- mapply(function(NPDx,NPDx.lik){list(!(NPDx & NPDx.lik))},NPDx=NPDx,NPDx.lik=NPDx.lik)
-
-    Rem.Mask <- Reduce('&',NPDx.comb)
-
-    return(Rem.Mask)
-  }
-}
 
 exclude.dz <- function(patientSample,dz.exc,n.dx){
   # for dz.exc == Alzheimer's disease, returns a mask of patients with Braak-CERAD scores both < 1
@@ -226,14 +235,14 @@ exclude.dz <- function(patientSample,dz.exc,n.dx){
     Rem.Mask[missingBraakCERAD] <- Lik.Mask[missingBraakCERAD]
     return(Rem.Mask)
 
-  }
-  else{
+  } else{
     # incorporate subjective confidence for non-AD diagnoses
     NPDx.lik <- sapply(1:n.dx, function(i) paste('NPDx',i,'Likelihood',sep=''))
     NPDx.lik <- lapply(NPDx.lik,function(x) get(x,patientSample))
     NPDx.lik <- lapply(NPDx.lik, function(X) X == "Definite (High Probability)" | X == "Probable (Intermediate Probability)")
     # NOT anyone with non-low probability dx of dz.exc
     #NPDx.comb <- mapply(function(NPDx,NPDx.lik){list(!(NPDx & NPDx.lik))},NPDx=NPDx,NPDx.lik=NPDx.lik)
+    
     NPDx.comb <- lapply(NPDx, function(x) !x) # don't incorporate confidence actually... err towards excluding more
 
     Rem.Mask <- Reduce('&',NPDx.comb)
@@ -347,9 +356,11 @@ cluster.count <- function(partition,k){
   return(cluster.counts)
 }
 
-count.ejc <- function(X){
+count.ejc <- function(X,items=c()){
   # count number of appearances of item i in vector X
-  items <- sort(unique(X))
+  X <- as.character(X)
+  X[is.na(X)] <- 'NA'
+  if(length(items)==0){items <- sort(unique(X))}
   counts <- sapply(items, function(i) sum(X==i))
   names(counts) <- items
   return(counts)
@@ -405,11 +416,12 @@ get.feature.labels <- function(features.of.interest,all.features){
   idx <- idx[lapply(idx,length)>0]
   labels <- list()
   for(i in 1:length(features.of.interest)){
-    if(length(idx[[i]]) > 1){ # if multiple features in category, center label and pad with blanks
+    if(length(idx[[i]]) > 2){ # if multiple features in category, center label and pad with blanks
       labels[[i]] <- c(matrix("",floor(0.5*length(idx[[i]]))),features.of.interest[[i]], c(matrix("",ceiling(0.5*length(idx[[i]])-1))))
-    }
-    if(length(idx[[i]])==1){ # if only 1 feature in category, place category label on that item
+    } else if(length(idx[[i]])==1){ # if only 1 feature in category, place category label on that item
       labels[[i]] <- features.of.interest[[i]]
+    } else if(length(idx[[i]])==2){ # if only 2 features in category, place category label on 2nd item with left padding
+      labels[[i]] <- c("",features.of.interest[[i]])
     }
   }
   idx <- Reduce(c,idx)
@@ -417,6 +429,70 @@ get.feature.labels <- function(features.of.interest,all.features){
   return(list(idx=idx,labels=labels))
 }
 
+micro.order.by <- function(micro,by='type'){
+  # INPUTS:
+  # micro: subject by feature pathology score matrix
+  # by: 'type' or 'region'
+  #
+  # OUTPUTS:
+  # micro.reordered: features ordered by region or by type
+  list[pathItems.type,pathRegions.name] <- get.pathscore.names()
+  if(by=='type'){
+    labels <- pathItems.type
+  } else if(by=='region'){
+    labels <- pathRegions.name
+  }
+  indices <- unlist(lapply(labels, function(L) grep(L,colnames(micro))))
+  return(micro[,indices])
+
+}
+
+get.pathscore.names <- function(vers = 'original'){
+  
+  pathItems.prettylab <- list("Neuron Loss","Gliosis","Angiopathy","Ubiquitin","Neuritic Plaques","TDP-43","Tau","Synuclein","Amyloid-beta")
+  pathRegions.prettylab <- list("Cing","OC","SM","MF","Ang","CA1/Sub","EC","DG","Amyg","TS","CP","GP","SN","LC","Med","CB","Pons","Mesenc.")
+  if(vers == 'original'){ # for use with data as it comes from INDD database in micro csv file
+    pathItems.type <- list("NeuronLoss","Gliosis","Angiopathy","Ubiquitin","ThioPlaques","TDP43","Tau","aSyn","Antibody")
+    pathRegions.name <- list("Cing","OC","SMT","MF","Ang","CS","EC","DG","Amyg","TS","CP","GP","SN","LC","Med","CB","Pons","MB")
+    return(list(pathItems.type=pathItems.type,pathRegions.name=pathRegions.name))
+  }else if(vers == 'short'){ # for use with data in all scripts after GenerateSample
+    pathItems.type <- list("NeuronLoss","Gliosis","Angiopathy","Ubiquitin","Thio","TDP43","Tau","Syn","Antibody")
+    #pathRegions.name <- list("Ci","OC","SM","MF","An","CS","EC","DG","Am","TS","CP","GP","SN","LC","Me","CB","Po","MB")
+    pathRegions.name <- list("Cing","OC","SMT","MF","Ang","CS","EC","DG","Amyg","TS","CP","GP","SN","LC","Med","CB","Pons","MB")
+    return(list(pathItems.type=pathItems.type,pathRegions.name=pathRegions.name))
+  }
+  
+
+}
+
+region.by.item.matrix <- function(X,fxn='mean',vers = 'short'){
+  # INPUTS:
+  # X: matrix whose columns are each pathological feature (region and type)
+  # fxn: median or mean
+  # vers: version of column names to use, passed through to get.pathscore.names (see get.pathscore.names)
+  #
+  # OUTPUTS:
+  # X.reshape: Column mean/medianss of X, reshaped into a region-by-type matrix
+  # excluding any regions or types that are entirely NAs
+  
+  list[pathItems.type,pathRegions.name] <- get.pathscore.names(vers=vers)
+  X.reshape <- matrix(NA,nrow=length(pathItems.type),ncol=length(pathRegions.name),
+                                 dimnames = list(pathItems.type,pathRegions.name))
+  for(region in pathRegions.name){
+    for(item in pathItems.type){
+      regionItemMask <- grepl(item,colnames(X)) & grepl(region,colnames(X))
+      #print(paste0(region,'-',item,': ',sum(regionItemMask))) # make sure this process only selects one region
+      if(fxn=='mean'){X.reshape[item,region] <- mean(X[,regionItemMask])}
+      if(fxn=='nanmean'){X.reshape[item,region] <- mean(X[,regionItemMask],na.rm=TRUE)}
+      if(fxn=='median'){X.reshape[item,region] <- median(X[,regionItemMask])}
+    }
+  }
+
+  # remove any regions or types with all NAs
+  X.reshape <- X.reshape[rowSums(is.na(X.reshape)) < ncol(X.reshape),colSums(is.na(X.reshape)) < nrow(X.reshape)]
+  return(X.reshape)
+
+}
 
 ####################################
 ### Cluster processing functions ###
@@ -437,13 +513,18 @@ remove.Disconnected.Subjects <- function(X,DisconnectedSubjects){
   return(X)
 }
 
-compute.centroids <- function(X,partition){
+compute.centroids <- function(X,partition,fxn='mean'){
   # compute centroids from n-by-p data matrix X using partition of length p
   # n is # of observations, p is # of features
-  k <- max(partition)
-  centroids <- do.call('rbind',lapply(1:k, function(k.i)
+  k.idx <- sort(unique(partition))
+  if(fxn == 'mean'){
+  centroids <- do.call('rbind',lapply(k.idx, function(k.i)
     colMeans(na.rm=T,X[partition==k.i,])))
-  rownames(centroids) <- sapply(1:k, function(i) paste('Cluster',i))
+  } else if(fxn == 'median'){
+    centroids <- do.call('rbind',lapply(k.idx, function(k.i)
+    colMedians(X[partition==k.i,])))
+  }
+  rownames(centroids) <- sapply(k.idx, function(i) paste('Cluster',i))
   return(centroids)
 }
 
@@ -481,17 +562,49 @@ order.cluster.by.feature <- function(X,centroids){
   return(cluster.init.reorder)
 }
 
-order.cluster.by.feature.old <- function(X,centroids,feature.names){
+order.cluster.by.feature.old <- function(X,centroids,feature.names,max.min=rep('max',nrow(centroids)),fxn='mean'){
   # get indices of clusters based on centroid weight on certain features
-  # feature.names: character vector of feature names
+  # feature.names: character vector of feature names or list of character vectors in the case of multiple features
+  # max.min: whether cluster has max or min amount of path at the specified features
   # centroids: k-by-p matrix of centroids where p is # of features, k is # of clusters
   # X: n-by-p data matrix where n is # of observations 
   
-  cluster.init.idx <- lapply(feature.names, function(i) grep(i,colnames(X)))
-  cluster.init.amount <- sapply(cluster.init.idx, function(i) rowMeans(centroids[,i,drop=FALSE],na.rm=T))
+  cluster.init.idx <- lapply(feature.names, function(i) unlist(sapply(i,function(j) grep(j,colnames(X)))))
+  if(fxn=='mean'){
+    cluster.init.amount <- sapply(cluster.init.idx, function(i) rowMeans(centroids[,i,drop=FALSE],na.rm=T))
+  } else if(fxn == 'median'){
+    cluster.init.amount <- sapply(cluster.init.idx, function(i) rowMedians(centroids[,i,drop=FALSE]))
+  }
   # obtain indices to reorder by max pathology in the groups in cluster.init.names
-  cluster.init.reorder <- col.Which.Max(cluster.init.amount)  
+  
+  #cluster.init.reorder <- col.Which.Max(cluster.init.amount)  
+  cluster.init.reorder <- rep(NA,nrow(centroids))
+  for(k in 1:nrow(centroids)){
+    if(max.min[k] == 'max'){
+      cluster.init.reorder[k] <- which.max(cluster.init.amount[,k])
+    } else if(max.min[k] == 'min'){
+      cluster.init.reorder[k] <- which.min(cluster.init.amount[,k])
+    }
+  }
   return(cluster.init.reorder)
+}
+
+thresh.mat <- function(X,op='>',thresh){
+  # INPUTS:
+  # X: matrix
+  # op: '<' or '>' to do < or > thresholding
+  # abs_outside retains values whose absolute values are greater than thresh
+  # thresh: scalar
+  #
+  # OUTPUTS:
+  # X thresholded at thresh by operation
+  # remaining values set to 0
+  
+  if(op=='<'){return(X*(X<thresh))} 
+  else if(op=='>'){return(X*(X>thresh))}
+  else if(op=='abs_outside'){return(X*(abs(X)>thresh))}
+  else if(op=='abs_inside'){return(X*(abs(X)<thresh))}
+  
 }
 
 reorder.partition <- function(partition,shuffIdx){
@@ -499,7 +612,7 @@ reorder.partition <- function(partition,shuffIdx){
   # shuffIdx contains the new cluster order in terms of old index, i.e. 4 2 3 1 means cluster 1 = current cluster 4
   # thix fxn reindexes clusters, such that cluster shuffIdx[1] becomes cluster 1
   k <- max(partition)
-  if(k == 4){
+  if(k == 4 | (length(unique(shuffIdx)) == 6)){ # only works for k=4 and k=6 with uniquely matched clusters
     newPartition <- rep(NA,length(partition))
     # get indices of member of each of the initial partition
     partition.idx.by.k <- lapply(1:k, function(k.i) which(partition == k.i))
@@ -527,23 +640,24 @@ annex.small.clusters <- function(partition,X,centroids,thrsh=0.01){
   # deal with a single small cluster
   # annex members to other clusters based on spearman correlation between corresponding data in X and centroids of other clusters
   rownames(X) <- 1:nrow(X) # makes linear row names -- needed for when using subsamples of full data matrix
-  k <- max(partition)
-  cl.size <- sapply(1:k, function(k.i) sum(partition==k.i))
-  small.cl <- which(cl.size < thrsh*length(partition))
-  if(is_empty(small.cl)){
-    return(partition) # don't do anything if no small clusters
-  } else if(sum(cl.size[small.cl] == 0) > 0){ # if any small cluster is empty
-    return(partition) # don't do anything if any small cluster is actualy just empty
-  } else if(sum(cl.size[small.cl] >0) == length(small.cl)){ # if all small clsuters are not empty
+  # only check cluster indices that are in the partition (unique(partition))
+  k.rng <- sort(unique(partition))
+  cl.size <- sapply(k.rng, function(k.i) sum(partition==k.i))
+  small.cl.idx <- which(cl.size < thrsh*length(partition)) # linear indices
+  small.cl <- k.rng[small.cl.idx] # indices in partition
+  if(length(small.cl)==0){
+    return(partition) # don't do anything if no small clusters  
+  } else if(sum(cl.size[small.cl.idx] >0) == length(small.cl)){ # if all small clsuters are not empty
     for(small.cl.i in small.cl){ # loop through small clusters, assign to nearest other cluster
       small.cl.obs <- which(partition == small.cl.i)
       # compute correlation of small cluster observation with centroids
-      s.mat <- cor(t(X[small.cl.obs,]),t(centroids),method='spearman',use='pairwise.complete.obs')
-      s.mat[,small.cl.i] <- NA # don't allow reassignment to small cluster
-      new.clusters <- row.Which.Max(s.mat) # find next best cluster
-      for(subj in small.cl.obs){ # reassign small cluster observations to next best cluster
-        partition[subj] <- new.clusters[as.character(subj)]
-      }
+      for(subj in small.cl.obs){
+        s.mat <- cor(t(X[subj,,drop=FALSE]),t(centroids[-small.cl.idx,]),method='spearman',use='pairwise.complete.obs')
+        new.cluster <- row.Which.Max(s.mat) # find next best cluster     
+        if(length(new.cluster)==1){ # row.Which.Max returns integer(0) if correlations with all centroids can't be computed (might not have due to missing data + low variance in pathology)
+          partition[subj] <- new.cluster[]
+        } else if(length(new.cluster)==0){partition[subj] <- NA} # store NA if can't assign subject
+      }          
     }
     return(partition)
   }
@@ -551,14 +665,15 @@ annex.small.clusters <- function(partition,X,centroids,thrsh=0.01){
 }
 
 disconnect.small.clusters <- function(partition){
-  k <- max(partition)
-  cl.size <- sapply(1:k, function(k.i) sum(partition==k.i))
-  small.cl <- which(cl.size < thrsh*length(partition))
-  if(cl.size[small.cl] == 0){
+  k.rng <- sort(unique(partition))
+  cl.size <- sapply(k.rng, function(k.i) sum(partition==k.i))
+  small.cl.idx <- which(cl.size < thrsh*length(partition)) # linear indices
+  small.cl <- k.rng[small.cl.idx] # indices in partition
+  if(length(small.cl)==0){
     return(list(partition=partition,DisconnectedSubjects=NULL)) # don't do anything if the small cluster is actualy just empty
-  } else if(cl.size[small.cl] >0){
-    DisconnectedSubjects <- which(partition==small.cl)
-    partition <- partition[partition!=small.cl]
+  } else if(sum(cl.size[small.cl.idx] >0) == length(small.cl)){
+    DisconnectedSubjects <- which(partition %in% small.cl)
+    partition <- partition[-DisconnectedSubjects]
     return(list(partition=partition,DisconnectedSubjects=DisconnectedSubjects))
   }
 }

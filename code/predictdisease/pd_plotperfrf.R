@@ -20,7 +20,7 @@ pal <- colorRampPalette(brewer.pal(name = 'Set3',n=12))
 dz.colors <- pal(length(dz.short)) # assign a color to each disease
 dz.colors <- dz.colors[dz.short %in% names(dz.res)] # select only diseases included in analysis
 
-if(extralab == 'CSFGene'){
+if(grepl('CSFGene',extralab)){
 	pal <- colorRampPalette(brewer.pal(name = 'Blues',n=9))
 	dz.colors <- pal(9)[c(3,6,9)] # pick good range of blues
 }
@@ -62,12 +62,12 @@ p.c <- plot_grid(plotlist =
 		rel_widths = c(1.2,1,1,1,1.2),
 		rel_heights = c(rep(4,4),0.1))
 p.all <- plot_grid(plotlist= list(p.d,p.c), align = 'hv',nrow = 2,axis='b',
-		rel_heights = c(1,1.1))
+		rel_heights = c(1.2,1))
 
 ggsave(filename = paste(savedir,'RFPerformanceClustersDisease',extralab,'.pdf',sep=''),plot = p.all,
-       height = 10,width=18,units='cm')
+       height = 14,width=18,units='cm')
 
-if(extralab == 'CSFGene'){
+if(grepl('CSFGene',extralab)){
 	save(dz.res,file = paste(savedir,'FigS8a-b_',extralab,'SourceData.RData',sep=''))
 	save(cluster.res,file = paste(savedir,'FigS8c-d_',extralab,'SourceData.RData',sep=''))
 }

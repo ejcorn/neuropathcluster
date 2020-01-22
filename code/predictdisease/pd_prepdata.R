@@ -5,6 +5,7 @@ savedir <- paste(params$resultsdir,'predictdisease/',sep='')
 dir.create(savedir,recursive=T)
 source('code/misc/fxns.R')
 source('code/misc/trainfxns.R')
+source('code/misc/plottingfxns.R')
 
 microSample <- read.csv(paste(params$opdir,'processed/microSample.csv',sep=''))[,-(1:2)] # Get rid of index column and INDDIDs
 patientSample <- read.csv(paste(params$opdir,'processed/patientSample.csv',sep=''))[,-(1:2)] # Get rid of index column and INDDIDs
@@ -111,7 +112,8 @@ dx.orig[,'NPDx1Alzheimer\'s disease'] <- as.numeric(True.AD.mask)
 
 colnames(dx.orig) <- gsub('NPDx1','',dz.short)  # format column names to short disease labels
 dx.orig <- dx.orig[INDDIDs %in% df$INDDID,] # exclude patients without data of interest
-dx <- dx.orig[,colSums(dx.orig)>25] # get rid of poorly represented diseases
+thresh <- 10 # threshold for sample size for each disease
+dx <- dx.orig[,colSums(dx.orig)>=thresh] # get rid of poorly represented diseases
 
 load(file = paste(params$resultsdir,'analyzecluster/subjLouvainPartitionReordered.RData',sep=''))
 partitionSample <- partition[INDDIDs %in% df$INDDID]
@@ -120,3 +122,14 @@ colnames(clusters) <- sapply(1:k, function(k.i) paste('Cluster',k.i))
 # save this to ultimately exclude some diseases
 print(paste(extralab,', n = ',nrow(df),', q	= ',ncol(df)-1,sep=''))
 save(df,dx,clusters,patientSubsample,partitionSample,k,file = paste(savedir,'dzpredict_data',extralab,'.RData',sep=''))
+
+########################################################
+### Plot diagnostic composition of prediction sample ###
+########################################################
+
+list[patientSubsample,dz.short.subsample]<- other.dz(patientSubsample,NPDx='NPDx1')
+list[p.k.dz,df.plt] <- plot.dz.by.cluster(patientSubsample$NPDx1,partitionSample,dz.short.subsample,getClusterColors(k),'Primary\nHistopathologic Diagnosis')
+
+ggsave(filename = paste0(savedir,'PredictionSampleNPDx1Composition',extralab,'.pdf'),plot = p.k.dz,
+       height = 5,width=7,units='cm')
+

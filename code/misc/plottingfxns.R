@@ -3,8 +3,14 @@
 ##############
 
 getClusterColors <- function(k){
-  pal <- colorRampPalette(brewer.pal(name = 'Dark2',n=8))
-  return(pal(8)[(1:k)+2])
+  if(k <= 6){
+    pal <- colorRampPalette(brewer.pal(name = 'Dark2',n=8))
+    cols <- pal(8)[(1:k)+2]
+  } else if(k > 6){
+    pal <- colorRampPalette(brewer.pal(name = 'Set3',n=k))
+    cols <- pal(k)
+  }
+  return(cols)
 }
 
 ################
@@ -89,6 +95,7 @@ mult.comp.ggpubr <- function(p,i=2,method='fdr'){
   # it lists any v. low p-val as '< 2.2e-16'
   # to be conservative just change to 2.2e-16
   levels(p.orig)[levels(p.orig) == '< 2.2e-16'] <- 2.2e-16
+  levels(p.orig)[levels(p.orig) == 'p < 2.22e-16'] <- 2.2e-16
   # in ggplot object p-value is listed 3 times for each line segment of the bars
   # choose every 3rd up to end
   sel <- seq(3,length(p.orig),by=3)
@@ -132,18 +139,19 @@ plot.dz.by.cluster <- function(diagnoses,partition,dz.short,clusterColors,leg.la
   # dz.short: vector of short labels of diseases
   # clusterColors: vector of colors for each of 1:k clusters in partition
   # leg.lab: title for legend
-
-  k <- length(unique(partition))
+  
+  k.idx <- sort(unique(partition))
+  k <- length(k.idx)
   dx <- data.frame(NPDx = diagnoses,stringsAsFactors = F)
   dx <- dummy.data.frame(dx,names = 'NPDx')
   colnames(dx) <- gsub('NPDx','',colnames(dx))  # format column names
-  k.dz <- lapply(1:k, function(k.i) colMeans(dx[partition==k.i,]))
+  k.dz <- lapply(k.idx, function(k.i) colMeans(dx[partition==k.i,]))
   k.dz <- do.call('cbind',k.dz)
 
   df.plt <- data.frame(pr = as.vector(k.dz),
                        Dz = rep(rownames(k.dz),k),
                        Dz.short = rep(dz.short,k),
-                       cl = as.vector(sapply(1:k, function(k.i) rep(paste('Cluster',k.i),ncol(dx)))))
+                       cl = as.vector(sapply(k.idx, function(k.i) rep(paste('Cluster',k.i),ncol(dx)))))
   th <- 0.05 # only label diseases with > 0.5 % of a cluster
   df.plt$Dz.short[df.plt$pr < th] <- ''
   pal <- colorRampPalette(brewer.pal(name = 'Set3',n=12))
@@ -174,7 +182,7 @@ plot.allele.beta.matrix <- function(b.mat,p.mat,g.i,a.i,min.beta,max.beta,cluste
       geom_text(data = melted_p, aes(x=Var1,y=Var2,label=value,color=value!='ns'),size=2.5) +
       scale_fill_gradientn(colours = c('dark red','#c23b22','white','#779ecb','dark blue'),
       #scale_fill_gradientn(colours = c('white','#779ecb','dark blue'),   # blue
-                           values = rescale(c(min.beta,0,max.beta)),
+                           values = scales::rescale(c(min.beta,0,max.beta)),
                            guide = "colorbar", limits=c(min.beta,max.beta),
                            na.value = 'white',name=expression(beta)) +
       scale_color_manual(values=c('black','white'),limits=c(F,T),guide='none')+
@@ -217,8 +225,9 @@ plot.model.perf.met <- function(met,perf.met,colors,ttl=''){
   p.dx.dz <- ggplot(data=df.plt) + geom_col(aes(x=dz,y=met.mean,fill=dz)) + 
     geom_errorbar(aes(x=dz,ymin=met.ll,ymax=met.ul)) +
     geom_text(aes(x=dz,y=0.25,label=paste(signif(met.mean,2),'\n',lab)),size=2,hjust=0.5) +
+    scale_x_discrete(limits=names(met)) + # force same order as results and other plots
     scale_y_continuous(limits=c(0,1),expand=c(0,0)) + coord_flip() +
-    scale_fill_manual(values=colors) +
+    scale_fill_manual(limits=names(met),values=colors) +
     xlab('') + ylab(perf.met) + ggtitle(ttl) +
     theme_classic() + theme(text = element_text(size=8), plot.title = element_text(hjust=0.5)) +
     theme(legend.position = 'none',plot.margin = unit(c(0, 0, 0, 0), "cm"),
@@ -267,7 +276,7 @@ plot.featureweights.lm.contintsplit <- function(res,df,colors,ttl = 'Feature Wei
   n.pred <- length(cont.mask)
   # make cluster-by-feature heat map of weights
   weight <- t(do.call('cbind',lapply(res, function(C) # [,-1] removes intercept
-        rowMeans(do.call('cbind',lapply(C, function(C.i) as.matrix(C.i$FeatureImportance)))))))[,-1]
+        rowMedians(do.call('cbind',lapply(C, function(C.i) as.matrix(C.i$FeatureImportance)))))))[,-1]
 
   colors <- colorswap(colors,res)
   # generate feature weight heat maps separately for continuous and interval predictors
@@ -302,13 +311,13 @@ max.w <- max(melted_w$value)
 p1 <- ggplot() + 
     geom_tile(data = melted_w, aes(x=Var1, y=Var2, fill=value)) + xlab("") + ylab("") +
     scale_fill_gradientn(colours = c('dark red','#c23b22','white','#779ecb','dark blue'),
-                           values = rescale(c(min.w,0,max.w)),
+                           values = scales::rescale(c(min.w,0,max.w)),
                            guide = "colorbar", limits=c(min.w,max.w),
                            na.value = 'white',name=expression(beta)) +
     scale_x_discrete(expand=c(0,0)) + scale_y_discrete(expand=c(0,0)) +
     ggtitle(ttl) + theme_classic() + 
     theme(text = element_text(size=8), plot.title = element_text(hjust=0.5,size=8),
-    legend.key.size=unit(0.3,'cm'),axis.text.x = element_text(hjust=0.5,vjust=0.5,angle=90,size=6),
+    legend.key.size=unit(0.3,'cm'),axis.text.x = element_text(hjust=1,vjust=0.5,angle=90,size=6),
     axis.text.y = element_text(color=colors,size=6),axis.line = element_blank(),
     panel.border = element_rect(colour = "black", fill=NA, size=1))
 
@@ -330,7 +339,7 @@ plot.featureweights.rf <- function(res,colors,ttl = 'Feature Weights'){
   p1 <- ggplot() + 
       geom_tile(data = melted_w, aes(x=Var1, y=Var2, fill=value)) + xlab("") + ylab("") +
       scale_fill_gradientn(colours = c('white','#779ecb','dark blue'),
-                             values = rescale(c(0,max.w)),
+                             values = scales::rescale(c(0,max.w)),
                              guide = "colorbar", limits=c(0,max.w),
                              na.value = 'white',name=expression(delta)) +
       ggtitle(ttl) + theme_classic() + 
@@ -352,4 +361,75 @@ plot.beta.bar <- function(p.vals,ul.ll,m,ttl,fl){
     annotate(geom='text',x=df$n,y= 1.1*max(df$ul),label=sig,color='black') +
     theme(text=element_text(size=8),plot.title = element_text(size=8,hjust=0.5))
   return(p)
+}
+
+brewer.make.continuous <- function(pal){
+  pal.idx <- which(rownames(brewer.pal.info) == pal)  
+  cols <- brewer.pal(brewer.pal.info$maxcolors[pal.idx], pal)
+  newcol <- colorRampPalette(bluecols)
+  ncols <- 100
+  bluecols2 <- newcol(ncols)
+}
+
+imagesc <- function(X,caxis_name='',cmap='plasma',caxis_labels=NULL,clim=c(min(X,na.rm=T),max(X,na.rm=T)),
+  xlabel='',ylabel='',yticklabels=rownames(X),xticklabels=as.character(colnames(X))){
+  # INPUTS:
+  # X: matrix with dim names
+  #
+  # OUTPUTS:
+  # heatmap plot of X in style of matlab imagesc
+
+  if(is.null(caxis_labels)){ # default axis label breaks
+    caxis_breaks<-labeling::extended(clim[1], clim[2], m = 5)
+    caxis_labels<-as.character(labeling::extended(clim[1], clim[2], m = 5))
+  } else if(is.character(caxis_labels)){ # if axis is discrete then autogenerate breaks and label with provided labels
+    caxis_breaks<-labeling::extended(clim[1], clim[2], m = length(caxis_labels))
+  }
+  X[X>max(clim)] <- max(clim) # threshold data based on color axis
+  X[X < min(clim)] <- min(clim)
+
+  melt_mat <- melt(t(X))
+  melt_mat$Var2[is.na(melt_mat$Var2)] <- 'NA'
+  melt_mat$Var1 <- as.character(melt_mat$Var1)
+  p<-ggplot() + geom_tile(data = melt_mat, aes(x=Var1, y=Var2, fill=value)) + 
+    scale_x_discrete(limits=as.character(colnames(X)),labels=xticklabels,expand = c(0,0)) +
+    scale_y_discrete(limits=rev(rownames(X)),labels=rev(yticklabels),expand = c(0,0))
+  if(cmap =='plasma'){
+    p <- p + scale_fill_viridis(option = 'plasma',name=caxis_name,limits=clim,breaks=caxis_breaks,labels=caxis_labels)
+  } else if(cmap == 'redblue'){
+    p <- p + scale_fill_gradientn(colours = c('dark red','#c23b22','white','#779ecb','dark blue'),
+                           guide = "colorbar", limits=clim,
+                           na.value = 'grey',name=caxis_name)
+  } else {
+    pal.idx <- which(rownames(brewer.pal.info) == cmap)  
+    cols <- brewer.pal(brewer.pal.info$maxcolors[pal.idx], cmap)
+    p <- p + scale_fill_gradientn(colours = cols,
+                           guide = "colorbar", limits=clim,
+                           na.value = 'grey',name=caxis_name,breaks=caxis_breaks,labels=caxis_labels)
+  } 
+  p <- p + theme_bw()
+  p <- p + xlab(xlabel)+ylab(ylabel)+
+      theme(text=element_text(size=8))
+  return(p)
+
+}
+
+nice_cbar <- function(pos='right'){
+  if(pos=='bottom' | pos == 'top'){
+    thm <- theme(legend.box = 'none',legend.background = element_blank(),
+            legend.margin = ggplot2::margin(0,0,0,0),
+            legend.position = pos,legend.key.height = unit(0.1,units='cm'),legend.key.width=unit(1.25,'cm'))
+  } else if(pos=='left' | pos == 'right'){
+    thm <- theme(legend.box = 'none',legend.background = element_blank(),
+            legend.margin = ggplot2::margin(0,0,0,0),
+            legend.position = pos,legend.key.width=unit(0.1,'cm'))
+  }
+  return(thm)
+}
+
+colorvis <- function(COL){
+  # visualize vector of hex colors as rectangles
+  plot(NULL, xlim=c(0,length(COL)), ylim=c(0,1), 
+       xlab="", ylab="", xaxt="n", yaxt="n")
+  rect(0:(length(COL)-1), 0, 1:length(COL), 1, col=COL)
 }

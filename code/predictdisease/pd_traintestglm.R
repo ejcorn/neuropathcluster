@@ -17,8 +17,9 @@ load(file = paste(savedir,'dzpredict_data',extralab,'.RData',sep=''))
 ### Train and test model ###
 ############################
 
-dz.res <- kfold.GLM(x=df,y=dx,k.folds=10,nreps=100)
-cluster.res <- kfold.GLM(x=df,y=clusters,k.folds=10,nreps=100)
+dz.res <- kfold.GLM(x=df,y=dx,k.folds=5,nreps=100) # uncomment and remove line below
+#if(grepl('CSFOnlyAddNormalMMSE',extralab)){load(file=paste0(savedir,'predictdz_GLMperfCSFOnlyAddNormalMMSE.RData'))}
+cluster.res <- kfold.GLM(x=df,y=clusters,k.folds=5,nreps=100)
 
 ########################
 ### Save performance ###

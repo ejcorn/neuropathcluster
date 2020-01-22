@@ -19,6 +19,7 @@ patientSample <- remove.Disconnected.Subjects(patientSample,DisconnectedSubjects
 ######################
 ### Plot centroids ###
 ######################
+
 clusterColors <- getClusterColors(k)
 melted_cormat <- melt(centroids)
 melted_cormat$Var2 <- melted_cormat$Var2[length(melted_cormat$Var1):1]
@@ -29,14 +30,15 @@ p2 <- ggplot(data = melted_cormat, aes(x=Var1, y=Var2, fill=value)) +
   scale_x_discrete(labels = rownames(centroids),expand=c(0,0)) +
   #scale_fill_viridis(option = 'plasma',limits=c(1,5),breaks=c(1:5)) + 
   scale_fill_gradientn(colours = c('white','#779ecb','#283480',"#0D0887"),
-    limits=c(1,5),breaks=c(1:5)) +
+    limits=c(1,5),breaks=c(1:5),labels=c('0','Rare','1+','2+','3+'),name='Score') +
   theme(axis.text.x = element_text(angle = 90,vjust=0.5,size=6,colour = clusterColors),
         axis.text.y = element_text(size = 6), axis.ticks = element_blank(),
-        legend.key.size = unit(0.3,'cm'),legend.text = element_text(size=6),
+        legend.key.size = unit(0.2,'cm'),
+        legend.text = element_text(size=6),
         legend.title = element_text(size=6),
         plot.margin = unit(c(0, 0, 0, 0), "null")) 
 p2
-ggsave(plot = p2,filename = paste(savedir,"CentroidColorbar.pdf",sep=''),width = 1.5, height = 2.25, units = "in")
+ggsave(plot = p2,filename = paste(savedir,"CentroidColorbar.pdf",sep=''),width = 4.5, height = 5, units = "cm")
 
 p2 <- ggplot(data = melted_cormat, aes(x=Var1, y=Var2, fill=value)) + 
   geom_tile() + xlab("") + ylab("") +
@@ -62,10 +64,10 @@ save(centroids,file = paste(savedir,'Fig2d_SourceData.RData',sep=''))
 
 list[patientSample,dz.short]<- other.dz(patientSample)
 
-list[p.k.dz,df.plt] <- plot.dz.by.cluster(patientSample$NPDx1,partition,dz.short,clusterColors,'Primary\nHistopathologic Diagnosis')
+list[p.k.dz,df.plt2e] <- plot.dz.by.cluster(patientSample$NPDx1,partition,dz.short,clusterColors,'Primary\nHistopathologic Diagnosis')
 ggsave(filename = paste(savedir,'ClustersByPrimaryDiseaseLouvain.pdf',sep=''),plot = p.k.dz,
        height = 2,width=3,units='in')
-save(df.plt,file = paste(savedir,'Fig2e_SourceData.RData',sep=''))
+save(df.plt2e,file = paste(savedir,'Fig2e_SourceData.RData',sep=''))
 
 # now isolate AD patients and plot by secondary diagnoses
 AD.mask <- patientSample$NPDx1 == 'Alzheimer\'s disease'
@@ -75,9 +77,20 @@ patientSample.AD$NPDx2 <- as.character(patientSample.AD$NPDx2)
 patientSample.AD$NPDx2[patientSample.AD$NPDx2 == ''] <- 'None' # label empty NPDx2 as none
 patientSample.AD$NPDx2[grep('Lewy',patientSample.AD$NPDx2)] <- 'LBD'
 list[patientSample.AD,dz.short.AD]<- other.dz(patientSample.AD,NPDx='NPDx2')
-list[p.k.dz2,df.plt] <- plot.dz.by.cluster(patientSample.AD$NPDx2,partition.AD,dz.short.AD,clusterColors,'Secondary\nHistopathologic Diagnosis')
+list[p.k.dz2,df.plt2f] <- plot.dz.by.cluster(patientSample.AD$NPDx2,partition.AD,dz.short.AD,clusterColors,'Secondary\nHistopathologic Diagnosis')
 
-save(df.plt,file = paste(savedir,'Fig2f_SourceData.RData',sep=''))
+# reorder legend labels and colors to match Fig. 2e
+pal <- colorRampPalette(brewer.pal(name = 'Set3',n=12))
+dz.order <- as.character(unique(df.plt2e$Dz)) # use disease labels from fig 2e
+dz.order[which(dz.order == 'Unremarkable adult')] <- 'None' # replace unremarkable adult with none so they have the same color
+#dz.order <- c(dz.order,'None') # make it the last entry in legend
+#dz.colors <- pal(length(dz.order)+1)
+dz.colors <- pal(length(dz.order))
+dz.colors <- dz.colors[-which(dz.order == 'Alzheimer\'s disease')]
+dz.order <- dz.order[-which(dz.order == 'Alzheimer\'s disease')]
+p.k.dz2 <- p.k.dz2 + scale_fill_manual(limits=dz.order, values = dz.colors,name='Secondary\nHistopathologic Diagnosis')
+
+save(df.plt2f,file = paste(savedir,'Fig2f_SourceData.RData',sep=''))
 
 ############################
 ### Diagnoses by cluster ###

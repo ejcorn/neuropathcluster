@@ -9,7 +9,7 @@ setwd(homedir)
 # list of prespecified variables
 params <- list(missing.thrsh.r=0.2,
                missing.thrsh.c=0,
-               extralab='_122519',
+               extralab='_010520',
                dist.met='spearman', # distance metric for modularity maximization
                gamma.opt=6,
                nreps_gammasweep=1000, # set number of reps for gamma sweep
@@ -41,27 +41,27 @@ source('code/preprocess/demographics.R') # analyze demographics (age)
 ### Cluster Patients ###
 ########################
 
-source('code/clustering/PrepDataCluster.R')
-source('code/clustering/runGammaSweepMATLAB_R.R')
-sampfrac <- 0.5
-source('code/clustering/runSplitReliabilityMATLAB_R.R')
+source('code/clustering/PrepDataCluster.R') # compute polychoric correlation matrix... time consuming
+source('code/kmeans/pam.R')
+
+######################################################################
+### Perform expl. factor analysis on polychoric correlation matrix ###
+######################################################################
+
+source('code/kmeans/Decomposition.R')
 
 #########################
 ### Assess clustering ###
 #########################
 
 # make sure clusters are in same order every time
-source('code/assesscluster/ProcessCluster.R')
 source('code/assesscluster/CharacterizeLouvainClusters.R')
 source('code/assesscluster/SubjectCorrMatLouvain.R')
 source('code/assesscluster/AgeMissingDataByCluster.R')
-
-sampfrac <- 0.5
-source('code/assesscluster/LouvainSplitReliability.R')
-source('code/plot_brains/prep_centroid_plots.R')
-source('code/plot_brains/runPlotBrainsMATLAB_R.R')
-
 source('code/assesscluster/ADLBDClusterivsClusterj.R')
+source('code/assesscluster/SimilarityByClusterVsDisease.R')
+source('code/assesscluster/ClusterPathologyDistribution.R')
+
 ########################################
 ### Cognition, Genes, CSF by cluster ###
 ########################################
@@ -116,8 +116,7 @@ for(extralab in extralabs){
 }
 
 # GLM -- comparing to overlapping traditional diagnoses
-
-extralabs <- c('CSFOnlyMMSE','CSFOnlyAddNormal')
+extralabs <- c('CSFOnlyAddNormalMMSERandomClusters')
 for(extralab in extralabs){
   source('code/predictdisease/pd_prepdata_alldx.R') # construct data frame allowing for overlap in traditional dx
   source('code/predictdisease/pd_traintestglm.R')

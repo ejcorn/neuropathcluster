@@ -11,7 +11,7 @@ params <- list(missing.thrsh.r=0.2,
                missing.thrsh.c=0,
                extralab='_122519',
                dist.met='spearman', # distance metric for modularity maximization
-               gamma.opt=6,
+               gamma.opt=1.5,
                nreps_gammasweep=1000, # set number of reps for gamma sweep
                homedir=homedir,
                matlab.path='/Applications/MATLAB_R2019a.app/bin/matlab', # path to matlab binary
@@ -34,34 +34,23 @@ source('code/misc/directories.R')
 #######################
 
 # go from raw INDD csvs to base data for analysis
-source('code/preprocess/GenerateSample_v3.R')
-source('code/preprocess/demographics.R') # analyze demographics (age)
+#source('code/preprocess/GenerateSample_v3.R')
+#source('code/preprocess/demographics.R') # analyze demographics (age)
 
 ########################
 ### Cluster Patients ###
 ########################
 
-source('code/clustering/PrepDataCluster.R')
-source('code/clustering/runGammaSweepMATLAB_R.R')
-sampfrac <- 0.5
-source('code/clustering/runSplitReliabilityMATLAB_R.R')
+#source('code/kmeans/kmeans.R')
 
 #########################
 ### Assess clustering ###
 #########################
 
 # make sure clusters are in same order every time
-source('code/assesscluster/ProcessCluster.R')
 source('code/assesscluster/CharacterizeLouvainClusters.R')
-source('code/assesscluster/SubjectCorrMatLouvain.R')
 source('code/assesscluster/AgeMissingDataByCluster.R')
 
-sampfrac <- 0.5
-source('code/assesscluster/LouvainSplitReliability.R')
-source('code/plot_brains/prep_centroid_plots.R')
-source('code/plot_brains/runPlotBrainsMATLAB_R.R')
-
-source('code/assesscluster/ADLBDClusterivsClusterj.R')
 ########################################
 ### Cognition, Genes, CSF by cluster ###
 ########################################
@@ -116,8 +105,7 @@ for(extralab in extralabs){
 }
 
 # GLM -- comparing to overlapping traditional diagnoses
-
-extralabs <- c('CSFOnlyMMSE','CSFOnlyAddNormal')
+extralabs <- c('CSFOnly')
 for(extralab in extralabs){
   source('code/predictdisease/pd_prepdata_alldx.R') # construct data frame allowing for overlap in traditional dx
   source('code/predictdisease/pd_traintestglm.R')

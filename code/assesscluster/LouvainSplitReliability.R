@@ -18,6 +18,9 @@ patientSample <- remove.Disconnected.Subjects(patientSample,DisconnectedSubjects
 
 pathItems.type <- fliplr(list("NeuronLoss","Gliosis","Angiopathy","Ubiquitin","Thio","TDP43","Tau","Syn","Antibody"))
 pathItems.index <- sapply(1:length(pathItems.type), function(i) grep(pathItems.type[[i]], colnames(microSample)))
+missingFeatureTypes <- lapply(pathItems.index,length) > 0
+pathItems.type <- pathItems.type[missingFeatureTypes]
+pathItems.index <- pathItems.index[missingFeatureTypes]
 pathItems.labels <- sapply(1:length(pathItems.type), function(i) c(matrix("",floor(0.5*length(pathItems.index[[i]]))),
                                                                    pathItems.type[[i]], c(matrix("",ceiling(0.5*length(pathItems.index[[i]])-1)))))
 pathItems.index <- Reduce(c,pathItems.index)
@@ -89,17 +92,17 @@ df <- data.frame(x=rep(1,length(sub.vs.orig.cors)),
 
 # set up breaks at 0,25,50,75,100%
 brks <- round(sum(h$counts) * c(0,0.25,0.5,0.75,1))
-save(brks,df,file=paste(savedir,'FigS2b_SourceData.RData',sep=''))
+save(brks,df,file=paste(savedir,'FigS2b_SourceDataGamma',params$gamma.opt,'.RData',sep=''))
 p <- ggplot(df) + 
   #geom_bar(aes(x=y,y=(..count..)/sum(..count..)),fill='red',alpha=0.6) +
   geom_histogram(aes(x=sub.vs.orig.cors),fill='red',alpha=0.6)+ 
-  scale_y_continuous(limits=c(min(h$counts),sum(h$counts)),breaks=brks, labels = paste(signif(100*brks/sum(h$counts),2),'%',sep=''))+
+  #scale_y_continuous(limits=c(min(h$counts),sum(h$counts)),breaks=brks, labels = paste(signif(100*brks/sum(h$counts),2),'%',sep=''))+
   #scale_y_continuous(labels=percent) +
   xlab('Pearson\'s r') + ylab('Percent of Total') + ggtitle('Similarity to Full Sample Centroids') +
   theme_classic() + theme(text=element_text(size=8),plot.title = element_text(hjust=0.5,size=8,face='bold'))
 p
 
-ggsave(plot = p,filename = paste(savedir,'SubsampleSimilarityToOriginal_SF',sampfrac,'.pdf',sep=''),width = 2.5, height = 2, units = "in")
+ggsave(plot = p,filename = paste(savedir,'SubsampleSimilarityToOriginal_SF',sampfrac,'Gamma',params$gamma.opt,'.pdf',sep=''),width = 2.5, height = 2, units = "in")
 
 #####################################################
 ### Compute similarity matrices between centroids ###

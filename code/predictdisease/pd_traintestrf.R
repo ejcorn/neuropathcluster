@@ -19,8 +19,8 @@ load(file = paste(savedir,'dzpredict_data',extralab,'.RData',sep=''))
 
 #dz.res <- train.tune.test.RF.class(x=df,y=dx,nreps=100)
 #cluster.res <- train.tune.test.RF.class(x=df,y=clusters,nreps=100)
-dz.res <- kfold.RF(x=df,y=dx,k.folds=10,nreps=100)
-cluster.res <- kfold.RF(x=df,y=clusters,k.folds=10,nreps=100)
+dz.res <- kfold.RF(x=df,y=dx,k.folds=5,nreps=100)
+cluster.res <- kfold.RF(x=df,y=clusters,k.folds=5,nreps=100)
  
 ########################
 ### Save performance ###

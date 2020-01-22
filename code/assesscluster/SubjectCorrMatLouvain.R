@@ -23,6 +23,11 @@ patientSample <- remove.Disconnected.Subjects(patientSample,DisconnectedSubjects
 cl.data <- readMat(paste(params$opdir,'optimcluster/subjectCorrMat.mat',sep=''))
 load(file = paste(params$resultsdir,'analyzecluster/subjLouvainPartitionReordered.RData',sep=''))
 W <- cl.data$W
+if(params$dist.met == 'polychoric'){ 
+  # if using polychoric correlations -> pam clustering, then threshold correlation matrix
+  # best threshold is saved
+  #W <- thresh.mat(W,'>',thresh.bestsil)
+}
 
 s <- sample(nrow(W),replace = F)
 melted_cormat <- melt(W[s,s])
@@ -85,15 +90,18 @@ list[patientSample,dz.short]<- other.dz(patientSample)
 
 dz.Names <- fliplr(sort(unique(as.character(patientSample$NPDx1))))
 dz.short <- fliplr(dz.short)
-dz.Index <- lapply(dz.Names, function(name.i) grep(name.i, patientSample$NPDx1))
-dz.Labels <- lapply(1:length(dz.Names), function(i) c(matrix("",floor(0.5*length(dz.Index[[i]]))),
-              dz.short[[i]], c(matrix("",ceiling(0.5*length(dz.Index[[i]])-1)))))
-dz.Index <- Reduce(c,dz.Index)
-dz.Labels <- Reduce(c,dz.Labels)
+list[dz.Index,dz.Labels]<- get.feature.labels(dz.Names,patientSample$NPDx1)
+for(i in 1:length(dz.Names)){dz.Labels[which(dz.Labels == dz.Names[i])] <- dz.short[i]} # replace long disease names with short labels
+# 
+# dz.Index <- lapply(dz.Names, function(name.i) grep(name.i, patientSample$NPDx1))
+# dz.Labels <- lapply(1:length(dz.Names), function(i) c(matrix("",floor(0.5*length(dz.Index[[i]]))),
+#               dz.short[[i]], c(matrix("",ceiling(0.5*length(dz.Index[[i]])-1)))))
+# dz.Index <- Reduce(c,dz.Index)
+# dz.Labels <- Reduce(c,dz.Labels)
 
 dz.rect.idx <- unlist(lapply(dz.Names, function(x) 
   length(grep(x,patientSample$NPDx1[dz.Index]))))
-dz.rect.idx <- fliplr(dz.rect.idx)
+#dz.rect.idx <- fliplr(dz.rect.idx)
 cs.rect <- cumsum(dz.rect.idx)
 df <- data.frame(xmx = 1+cs.rect, xmi = c(1,1+cs.rect[-length(cs.rect)]))
 
@@ -118,6 +126,7 @@ p3 <- ggplot() +
 #ggsave(p3,filename = 'results/subjectCorrDisease.png',units = 'in',height = 3,width = 3)
 
 p1p2p3 <- plot_grid(plotlist=list(p1,p3,p2),align = 'hv',nrow=1)
-ggsave(p1p2p3,filename = paste(savedir,'subjectCorrMats.png',sep=''),units = 'in',height = 8/3,width = 8)
+ggsave(p1p2p3,filename = paste(savedir,'subjectCorrMats.png',sep=''),
+       units = 'in',height = 8/3,width = 8)
 
 save(W,dz.Names,partition,file = paste(savedir,'Figure2a-c_SourceData.RData',sep=''))

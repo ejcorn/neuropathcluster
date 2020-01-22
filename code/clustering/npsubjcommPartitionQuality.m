@@ -9,14 +9,10 @@ savedir = [homedir,opdir,'optimcluster/'];
 mkdir(savedir);
 addpath(genpath(BCT_path)); % add BCT functions to path
 addpath(genpath([homedir,'code/matlab_functions'])) % add other ancillary matlab functions to path
-load([homedir,opdir,'processed/pathDataForClustering.mat']);
-X = X+.1; % shift back -- had to shift by non-integer to make R save as double for matlab
-X = X - nanmean(X,1); % demean each feature
-
-nobs = size(X,1);
 
 %% load correlation matrix
-load(fullfile(savedir,'subjectCorrMat.mat'))
+load(fullfile(savedir,'subjectCorrMat.mat'),'DisconnectedSubjects','W')
+nobs = size(W,1);
 %%
 parpool(4)
 
@@ -45,6 +41,7 @@ end
 toc
 
 save([savedir,'LouvainSubjNPSweepGamma',num2str(min(gamma_rng)),'to',num2str(max(gamma_rng)),'nreps',num2str(nreps),'.mat'],'partitions','modularity')
+
 %% extract partition stability by gamma and find consensus partition
 
 disp('calculating z-rand scores')
@@ -57,8 +54,7 @@ parfor g = 1:n_gamma
     [M,~,sim_mat] = consensus_similarity(partitions{g}'); %'
     partitions_by_gamma(:,g) = M;
     sim_mats(:,:,g) = sim_mat;
-    zr_unique = triu(sim_mat).*~eye(length(sim_mat));
-    zr_scores(:,g) = zr_unique(zr_unique ~= 0); % extract only upper triangle b/c matrix is symmetric
+    zr_scores(:,g) = sim_mat(~tril(ones(length(sim_mat)))); % extract only upper triangle b/c matrix is symmetric
 end
 
 partitions_by_gamma = multislice_pair_labeling(partitions_by_gamma);

@@ -4,6 +4,8 @@ setwd(homedir)
 savedir <- paste(params$opdir,'processed/',sep='')
 dir.create(savedir,recursive=TRUE)
 source('code/misc/fxns.R')
+source('code/misc/plottingfxns.R')
+source('code/misc/processfxns.R')
 
 ################################
 ### Load and Preprocess Data ###
@@ -25,13 +27,7 @@ micro <- micro[,-grep("Brainstem",colnames(micro))]
 micro <- micro[,-grep("Subcortical",colnames(micro))]
 micro <- micro[,-grep('SC',colnames(micro))] # remove spinal cord because poorly represented in normals
 ## Remove subjects with old pathology scoring system
-# For these subjects, scores exceed 5+
-# It's possible the below method will fail to eliminate a subject with 
-# old system scores < 5 for all regions assessed
-# will update but likely won't affect
 
-
-# micro > 5 will leave in "Not Done", "Not Avail", "Rare", "Presumed 0"
 # don't exclude now as those will be dealt with later
 microNumeric <- as.data.frame(lapply(micro, function(micro) as.numeric(micro))) # this will only capture the numeric old scores
 #oldScoringSystemMask <- sapply(1:ncol(micro), function(C) micro[,C] > 5 & !grepl("Not Done",micro[,C]) & 
@@ -67,6 +63,39 @@ for(C in colnames(micro)[-1]){ # iterate through columns, excluding INDDIDs
   microSample[,C] <- as.numeric(microSample[,C])
 }
 
+############################################################
+### plot missing data in a region-by-feature type matrix ###
+############################################################
+
+missingMatrix <- is.na(microSample[,-1])
+patients$AutopsyDate <- as.Date(patients$AutopsyDate,format = '%m/%d/%Y')
+p <- ggplot() + geom_point(aes(x=patients$AutopsyDate[patients$INDDID %in% microSample$INDDID],y=rowSums(missingMatrix))) + 
+  xlab('Autopsy Date') + ylab('Missing Features') + theme_classic()
+ggsave(p,filename = paste0(savedir,'MissingDataByAutopsyDate.pdf'),units= 'in',height = 4.5,width=4.5)
+
+missingMatrix.reshape <- region.by.item.matrix(missingMatrix)
+p <- imagesc(missingMatrix.reshape)
+ggsave(p,filename = paste0(savedir,'MissingDataRegionTypeAll.pdf'),units= 'in',height = 4.5,width=4.5)
+
+# first remove features with a lot of missing data
+# while prioritizing inclusion of major pathological proteins
+featureTags <- c('Ubiquitin','OC','OFC','MC','DG','Antibody','LC','CBAngiopathy')
+retainedFeatureMask <- rowSums(sapply(featureTags, function(tag) grepl(tag,colnames(missingMatrix))))==0
+missingMatrix.reshape <- region.by.item.matrix(missingMatrix[,retainedFeatureMask])
+p<-imagesc(missingMatrix.reshape)
+ggsave(p,filename = paste0(savedir,'MissingDataRegionTypeExcluded.pdf'),units= 'in',height = 4.5,width=4.5)
+
+microSample <- microSample[,c(TRUE,retainedFeatureMask)] # add TRUE to keep INDDID column
+
+# remove pre 2007 cases
+date.thresh <- as.Date('01/01/2007',format='%m/%d/%Y') 
+INDDIDs.pre2007 <- patients$INDDID[patients$AutopsyDate < date.thresh]
+microSample <- microSample[!microSample$INDDID %in% INDDIDs.pre2007,]
+
+#########################################################################
+### look at characteristic of subject retention vs. feature retention ###
+#########################################################################
+
 DataRepresentation <- sapply(seq(0,1,length.out = 100), function(i) sum((rowSums(is.na(microSample)) < i*ncol(microSample))))
 # Y axis shows percent of subjects with less than X% of features containing missing data
 p1 <- ggplot() + geom_point(aes(x = seq(0,100,length.out = 100), y = 100*DataRepresentation / nrow(microSample))) +
@@ -85,14 +114,12 @@ p1
 ggsave(p1,filename = paste(savedir,'DataRepresentationFeatures.pdf',sep=''),units= 'cm',height = 4.5,width=4.5)
 save(DataRepresentation, file=paste(savedir,'FigS1b_SourceData.RData',sep=''))
 
-# first remove features with a lot of missing data (amount determined by missing.thrsh.c)
-# Remove features with too many NAs -- discuss what this ought to be given the graph above
-missing.thrsh.c <- params$missing.thrsh.c
-missing.Mask <- colMeans(is.na(microSample)) < missing.thrsh.c
-microSample <- microSample[,missing.Mask]
+###################################################
+### Exclude subjects with a lot of missing data ###
+###################################################
 
-# then ensure all subjects have at least X% of remaining features (amount determined by missing.thrsh.r)
-# Remove subjects with too many NAs -- discuss what this ought to be given the graph above
+# given that we must retain enough features to broadly characterize copathology
+# exclude subjects with more than X% of those features missing
 
 missing.thrsh.r <- params$missing.thrsh.r
 missing.Mask <- rowMeans(is.na(microSample[,-1])) < missing.thrsh.r
@@ -123,6 +150,23 @@ patientMask <- Reduce("+",patientMask) == 0 & !patients$NPDx1 == ''
 microSample <- microSample[patientMask,]
 patients <- patients[patientMask,]
 
+# process micro column names corresponding to region and type of pathology
+# names are currently RegionType ... convert to Region_Type in order to unambiguously identify in future
+# also shorten type names for plotting
+list[pathItems.type,pathRegions.name] <- get.pathscore.names()
+list[pathItems.type.short,pathRegions.name.short] <- get.pathscore.names(vers='short')
+cnames <- colnames(microSample)
+newnames <- rep(NA,length(cnames)) # hold new names
+for(type.i in 1:length(pathItems.type)){
+  type <- pathItems.type[[type.i]]
+  type.short <- pathItems.type.short[[type.i]]
+  type.idx <- grep(type,cnames) # where are items of that type located
+  type.startstop <- lapply(cnames[type.idx], function(X) list(st.sp=str_locate_all(X,type)[[1]],nm = X)) # get indices of where type is located within string
+  newnames.tmp <- sapply(type.startstop, function(X) paste0(substr(X$nm,1,X$st.sp[,'start']-1),'_',type.short)) # make new names 
+  if(length(newnames.tmp)>0){colnames(microSample)[type.idx] <- newnames.tmp} # replace existing column names with new names
+}
+
+# save micro sample
 write.csv(x = microSample,file = paste(savedir,"microSample.csv",sep=''))
 
 # Narrow down clinical diagnostic labels
@@ -133,14 +177,15 @@ for(ClinDx.i in ClinDx.all){
   patients[,ClinDx.i][which(grepl("Alzheimer",patients[,ClinDx.i]))] <- "Alzheimer's disease"
   patients[,ClinDx.i][which(grepl("Corticobasal",patients[,ClinDx.i]))] <- "CBD"
   patients[,ClinDx.i][which(grepl("supranuclear",patients[,ClinDx.i]))] <- "PSP"
-  patients[,ClinDx.i][which(grepl("Dementia with Lewy",patients[,ClinDx.i]))] <- "LBD"
+  patients[,ClinDx.i][which(grepl("Dementia with Lewy",patients[,ClinDx.i]))] <- "DLB"
   patients[,ClinDx.i][which(grepl("PPA",patients[,ClinDx.i]))] <- "PPA"
   patients[,ClinDx.i][which(grepl("bvFTD",patients[,ClinDx.i]))] <- "bvFTD"
-  patients[,ClinDx.i][which(grepl("Parkinson",patients[,ClinDx.i]))] <- "Parkinson's disease"
+  patients[,ClinDx.i][which(grepl("Parkinson\'s Disease with Dementia",patients[,ClinDx.i]))] <- "Parkinson's disease dementia"
+  patients[,ClinDx.i][which(grepl("Parkinson\'s Disease (not demented)",patients[,ClinDx.i]) | grepl("Parkinsonism NOS",patients[,ClinDx.i]) | grepl("Parkinson\'s disease",patients[,ClinDx.i]))] <- "Parkinson's disease"
   patients[,ClinDx.i][which(grepl("Amyotrophic",patients[,ClinDx.i]))] <- "Amyotrophic Lateral Sclerosis"
   patients[,ClinDx.i][which(grepl("Mild",patients[,ClinDx.i]))] <- "MCI"
   patients[,ClinDx.i][which(grepl("Impaired, not MCI",patients[,ClinDx.i]))] <- "Generally Impaired"
-  patients[,ClinDx.i][which(grepl("Multiple",patients[,ClinDx.i]))] <- "Multiple System Atrophy"
+  patients[,ClinDx.i][which(grepl("Multiple system",patients[,ClinDx.i]))] <- "Multiple system atrophy"
   patients[,ClinDx.i][which(grepl("ascular",patients[,ClinDx.i]))] <- "Cerebrovascular Disease"
   patients[,ClinDx.i][which(grepl("chizoph",patients[,ClinDx.i]) | grepl("Depression",patients[,ClinDx.i]) | grepl("psychiatric",patients[,ClinDx.i]))] <- "Psychiatric Illness"
   #patients[,ClinDx.i][which(grepl("Unremarkable adult",patients[,ClinDx.i]))] <- "Normal"
@@ -148,20 +193,24 @@ for(ClinDx.i in ClinDx.all){
 
 #Narrow down disease labels for primary - quaternary NPDx
 
-n.dx <- 4
+n.dx <- 5
 NPDx.all <- sapply(1:n.dx, function(i) paste('NPDx',i,sep=''))
 for(NPdx.i in NPDx.all){
   patients[,NPdx.i][which(grepl("Alzheimer",patients[,NPdx.i]))] <- "Alzheimer's disease"
   patients[,NPdx.i][which(grepl("Corticobasal",patients[,NPdx.i]))] <- "CBD"
+  patients[,NPdx.i][which(grepl("Chronic Traumatic Encephalopathy",patients[,NPdx.i]))] <- "CTE"  
   patients[,NPdx.i][which(grepl("supranuclear",patients[,NPdx.i]))] <- "PSP"
+  
   patients[,NPdx.i][which(grepl("dementia with Lewy",patients[,NPdx.i]))] <- "LBD"
+  patients[,NPdx.i][which(grepl("Parkinson's disease dementia",patients[,NPdx.i]))] <- "LBD" #"Parkinson's Disease Dementia"
+  patients[,NPdx.i][which(grepl("Parkinson's disease",patients[,NPdx.i]))] <- "Parkinson's disease"
+  
   patients[,NPdx.i][which(grepl("PPA",patients[,NPdx.i]))] <- "PPA"
   patients[,NPdx.i][which(grepl("amyloid angiopathy",patients[,NPdx.i]))] <- "CAA"
   patients[,NPdx.i][which(grepl("FTLD-TDP",patients[,NPdx.i]))] <- "FTLD-TDP"
   patients[,NPdx.i][which(grepl("Frontotemporal",patients[,NPdx.i]))] <- "FTLD-Other"
-  patients[,NPdx.i][which(grepl("Parkinson's disease dementia",patients[,NPdx.i]))] <- "LBD" #"Parkinson's Disease Dementia"
-  patients[,NPdx.i][which(grepl("Parkinson's disease",patients[,NPdx.i]))] <- "Parkinson's disease"
-  patients[,NPdx.i][which(grepl("Lewy",patients[,NPdx.i]))] <- "LBD"
+  patients[,NPdx.i][which(grepl("Limbic-predominant",patients[,NPdx.i]))] <- "LATE"
+  patients[,NPdx.i][which(grepl("Lewy",patients[,NPdx.i]))] <- "LBD"  
   patients[,NPdx.i][which(grepl("Amyotrophic",patients[,NPdx.i]))] <- "Amyotrophic Lateral Sclerosis"
   patients[,NPdx.i][which(grepl("Mild",patients[,NPdx.i]))] <- "MCI"
   patients[,NPdx.i][which(grepl("Impaired, not MCI",patients[,NPdx.i]))] <- "Generally Impaired"
@@ -172,6 +221,7 @@ for(NPdx.i in NPDx.all){
   patients[,NPdx.i][which(grepl("Pathological ",patients[,NPdx.i]))] <- "Pathological Aging"
   patients[,NPdx.i][which(grepl("chizoph",patients[,NPdx.i]))] <- "Schizophrenia"
   patients[,NPdx.i][which(grepl("Unremarkable adult",patients[,NPdx.i]))] <- "Unremarkable adult"
+  patients[is.na(patients[,NPdx.i]),NPdx.i] <- '' # some missing values are NA, others are ''... make all '' for future logical comparisons
   #patients[,NPdx.i][which(grepl("chizoph",patients[,NPdx.i]) | grepl("Depression",patients[,NPdx.i]) | grepl("psychiatric",patients[,NPdx.i]))] <- "Psychiatric Illness"
   
 }
@@ -191,14 +241,18 @@ write.csv(x = patients,file = paste(savedir,"patientSample.csv",sep=''))
 # Replace Alzheimer's disease with Braak-CERAD scores
 
 dz.exc <- 'Alzheimer\'s disease'
-n.dx <- 4
+n.dx <- 5
 Rem.Mask <- exclude.dz(patients,dz.exc,n.dx) # get mask for all patients meeting Braak-CERAD AD
 
 BraakCERAD <- !Rem.Mask
+# insert.BraakCERAD makes NPDX1 = 'Alzheimer\'s disease' if Braak and CERAD both >1
+# and all other diagnoses are shifted behind it in NPDx2-5
 patients <- insert.BraakCERAD(patients,BraakCERAD)
 
 print('Alzheimers in NPDx1 is equal to BraakCERAD mask?')
 print(identical(patients$NPDx1 == dz.exc,BraakCERAD))
+NPDx.all <- sapply(2:5,function(n) as.character(get(paste0('NPDx',n),patients)))
+print(paste('AD in NPDx2-5:',sum(NPDx.all=='Alzheimer\'s disease',na.rm = T)))
 
 write.csv(x = patients,file = paste(savedir,"patientSampleBraakCERAD.csv",sep=''))
 
@@ -207,7 +261,7 @@ p <- ggplot(data = patients,aes(x=NPDx1,fill=NPDx1)) + geom_hline(yintercept = 1
   geom_bar() + theme_classic() +
   scale_y_continuous(expand= c(0,0))+
   ylab('Count') + xlab('Primary Histological diagnosis') + theme(text = element_text(size =8),
-                                                             axis.text.x = element_text(angle=90,hjust = 1,vjust=0.5)) +
+                                                                 axis.text.x = element_text(angle=90,hjust = 1,vjust=0.5)) +
   theme(legend.position = 'none')
 p
 ggsave(p,filename = paste(savedir,'SampleCharacteristics.pdf',sep=''),units= 'in',height = 3,width=4)
@@ -221,6 +275,8 @@ cog <- cog[cog$INDDID %in% patients$INDDID,]
 cog <- cog[order(cog$INDDID),]
 # remove any MOCAs that are all 0's or all NA
 cog <- cog[cog$MoCATotal != 0 & !is.na(cog$MoCATotal),]
+# remove any patients whose visuospatial scores is > 5 (one oddly had 995)
+cog <- cog[-which(cog$VisuospatialTotal > 5),]
 write.csv(x = cog,file = paste(savedir,"MoCA_processed.csv",sep=''))
 
 Genes <- read.csv(paste0('data/INDD_Genetics',data.date,'.csv'),stringsAsFactors = F)
@@ -230,17 +286,11 @@ Genes$APOE[Genes$APOE == 'E2/E3  '] <- 'E2/E3'
 Genes$APOE[Genes$APOE == 'E3/E4  '] <- 'E2/E4'
 write.csv(x = Genes, file = paste(savedir,'Genetics_processed.csv',sep=''))
 
-CSF.name <- 'Luminex'
-CSF <- read.csv(paste0('data/INDD_CSF',CSF.name,data.date,'.csv'),stringsAsFactors = F)
-CSF <- CSF[CSF$INDDID %in% patients$INDDID,]
-#specify which CSF features you care about
-CSF.vars <- c('LuminexTTau','LuminexPTau','LuminexAbeta42')
-#CSF.vars <- c('TotalTau','PhosphorylatedTau','Beta.amyloid42')
-#CSF.vars <- c('ElisaTTau','ElisaPTau','ElisaAbeta42')
+CSF.names <- c('Luminex','Elisa')
+for(CSF.name in CSF.names){
+  CSF <- read.csv(paste0('data/INDD_CSF',CSF.name,data.date,'.csv'),stringsAsFactors = F)
+  CSF <- CSF[CSF$INDDID %in% patients$INDDID,]
+  CSF <- process.CSF(CSF,CSF.name)
 
-CSF <- CSF[!rowSums(is.na(CSF[,CSF.vars])),] # remove missing
-CSF <- CSF[order(CSF$INDDID),]
-
-CSF$CSFDate <- as.Date(CSF$CSFDate,format = '%m/%d/%Y')
-
-write.csv(x=CSF, file = paste(params$opdir,'processed/CSF',CSF.name,'_processed.csv',sep=''))
+  write.csv(x=CSF, file = paste(params$opdir,'processed/CSF',CSF.name,'_processed.csv',sep=''))
+}

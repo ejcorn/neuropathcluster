@@ -7,7 +7,7 @@ clearvars -except k BCT_path homedir opdir resultsdir; close all; clc
 
 %% Define constant variables
 
-PathItems_Type = {'NeuronLoss','Gliosis','Angiopathy','Ubiquitin','Thio','TDP43','Tau','Syn','Antibody'};
+PathItems_Type = {'NeuronLoss','Gliosis','Angiopathy','Thio','TDP43','Tau','Syn'};
 
 %%
 cd(homedir);
@@ -106,7 +106,7 @@ for k_i = 1:k
 end
 
 %% 
-PathItems_Type = {'Antibody','Syn','Tau','TDP43','Thio','NeuronLoss','Angiopathy'};
+PathItems_Type = {'Syn','Tau','TDP43','Thio','NeuronLoss','Angiopathy'};
 n_types = length(PathItems_Type);
 fig_cell = cell(n_types,k);
 for k_i = 1:k

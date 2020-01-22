@@ -17,11 +17,11 @@ list[patientSample,dz.short]<- other.dz(patientSample)
 
 load(file = paste(savedir,'predictdz_GLMperf',extralab,'.RData',sep=''))
 
-if(extralab == 'CSFOnly' | extralab == 'CSFGene'){
+if(grepl('CSFOnly',extralab) | grepl('CSFGene',extralab)){
 	pal <- colorRampPalette(brewer.pal(name = 'Blues',n=9))
-	dz.colors <- pal(9)[c(4,6,8)] # pick good range of blues
+	dz.colors <- pal(9)[3:(3+length(dz.res)-1)] # pick good range of blues
 }
-if(extralab == 'GeneOnly'){
+if(grepl('GeneOnly',extralab)){
 	pal <- colorRampPalette(brewer.pal(name = 'Set3',n=12))
 	dz.colors <- pal(length(dz.short)) # assign a color to each disease
 	# select only diseases included in analysis
@@ -62,25 +62,25 @@ p.c <- plot_grid(plotlist =
 		align = 'h',nrow=1,axis = 'b',
 		rel_widths = c(1.2,1,1,1,1.2),
 		rel_heights = c(rep(4,4),0.1))
-rel_heights <- c(1,1.05)
+rel_heights <- c(1.2,1) #rel_heights <- c(1,1.05)
 if(extralab == 'GeneOnly'){rel_heights <- c(1.2,1)}
 p.all <- plot_grid(plotlist= list(p.d,p.c), align = 'hv',nrow = 2,axis='b',
 		rel_heights = rel_heights)
 
 w.multiplier <- 1
-if(extralab == 'CSFGene'){w.multiplier <- 1.22}
+if(grepl('CSFGene',extralab)){w.multiplier <- 1.22}
 ggsave(filename = paste(savedir,'GLMPerformanceClustersDisease',extralab,'.pdf',sep=''),plot = p.all,
-       height = 12,width=19*w.multiplier,units='cm')
+       height = 14,width=19*w.multiplier,units='cm')
 
-if(extralab == 'CSFOnly'){
+if(grepl('CSFOnly',extralab)){
 	save(dz.res,file = paste(savedir,'Fig5a-b_',extralab,'SourceData.RData',sep=''))
 	save(cluster.res,file = paste(savedir,'Fig5c-d_',extralab,'SourceData.RData',sep=''))
 }
-if(extralab == 'CSFGene'){
+if(grepl('CSFGene',extralab)){
 	save(dz.res,file = paste(savedir,'FigS7a,d_',extralab,'SourceData.RData',sep=''))
 	save(cluster.res,file = paste(savedir,'FigS7b,c_',extralab,'SourceData.RData',sep=''))
 }
-if(extralab == 'GeneOnly'){
+if(grepl('GeneOnly',extralab)){
 	save(dz.res,file = paste(savedir,'FigS10a-b_',extralab,'SourceData.RData',sep=''))
 	save(cluster.res,file = paste(savedir,'FigS10c-d_',extralab,'SourceData.RData',sep=''))
 }
