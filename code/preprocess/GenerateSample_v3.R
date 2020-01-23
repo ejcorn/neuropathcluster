@@ -202,6 +202,7 @@ for(NPdx.i in NPDx.all){
   patients[,NPdx.i][which(grepl("supranuclear",patients[,NPdx.i]))] <- "PSP"
   
   patients[,NPdx.i][which(grepl("Lewy body disease",patients[,NPdx.i]))] <- "LBD"
+  patients[,NPdx.i][which(grepl("Parkinson\'s disease, atypical",patients[,NPdx.i]))] <- "LBD"
   # per JR and Eddie Lee's emails on 1-21-20, group together all lewy body disease into one
   # patients[,NPdx.i][which(grepl("dementia with Lewy",patients[,NPdx.i]))] <- "LBD"
   # patients[,NPdx.i][which(grepl("Parkinson's disease dementia",patients[,NPdx.i]))] <- "LBD"
@@ -238,6 +239,37 @@ patients$Braak03 <- as.numeric(patients$Braak03)
 patients$Braak06 <- as.numeric(patients$Braak06)
 patients$Braak03[is.na(patients$Braak03)] <- floor(patients$Braak06[is.na(patients$Braak03)]/2)
 
+# perform alzheimer's staging per Montine et al. 2012 Table 3 -- also see ADNPCGrid.png in data/ folder
+# march down grid from top then left to right
+patients$ADStatus <- '' # make new column
+patients$ADStatus[patients$ABeta == 0 & patients$CERAD == 0] <- 'None'
+patients$ADStatus[patients$ABeta == 1 & patients$CERAD <= 1] <- 'Low'
+patients$ADStatus[patients$ABeta == 1 & patients$CERAD >= 2 & patients$Braak03 <= 1] <- 'Low'
+patients$ADStatus[patients$ABeta == 1 & patients$CERAD >= 2 & patients$Braak03 >= 1] <- 'Intermediate'
+patients$ADStatus[patients$ABeta == 2 & patients$Braak03 <= 1] <- 'Low'
+patients$ADStatus[patients$ABeta == 2 & patients$Braak03 >= 1] <- 'Intermediate'
+patients$ADStatus[patients$ABeta == 3 & patients$CERAD <= 1 & patients$Braak03 <= 1] <- 'Low'
+patients$ADStatus[patients$ABeta == 3 & patients$CERAD <= 1 & patients$Braak03 >= 1] <- 'Intermediate'
+patients$ADStatus[patients$ABeta == 3 & patients$CERAD >= 2 & patients$Braak03 <= 1] <- 'Low'
+patients$ADStatus[patients$ABeta == 3 & patients$CERAD >= 2 & patients$Braak03 == 2] <- 'Intermediate'
+patients$ADStatus[patients$ABeta == 3 & patients$CERAD >= 2 & patients$Braak03 == 3] <- 'High'
+patients$ADStatus[grepl('Definite',patients$NPDx1Likelihood) & grepl('Alzheimer\'s disease',patients$NPDx1)] <- 'High'
+
+# in case ABeta is missing, do it based on Braak and CERAD only
+patients$ADStatus[patients$ABeta == '' & patients$Braak03 == 0 & patients$CERAD == 0] <-'Low'
+patients$ADStatus[patients$ABeta == '' & (patients$Braak03 < 2 | patients$CERAD < 2) & (patients$Braak03 != 0 | patients$CERAD != 0)] <-'Low'
+patients$ADStatus[patients$ABeta == '' & patients$Braak03 >= 2 & patients$CERAD >= 2] <-'Intermediate'
+patients$ADStatus[patients$ABeta == '' & patients$Braak03 == 3 & patients$CERAD == 3] <-'High'
+
+# process DLB stages
+patients$DLBType[patients$DLBType == 'Diffuse or Neocortical'] <- 'Neocortical'
+patients$DLBType[patients$DLBType == 'Brainstem Predominant'] <- 'Brainstem'
+patients$DLBType[patients$DLBType == 'Transitional or Limbic'] <- 'Limbic'
+patients$DLBType[patients$DLBType == 'Amygdala Predominant'] <- 'Amygdala'
+patients$DLBType[is.na(patients$DLBType)] <- '?'
+patients$DLBType[patients$DLBType == ''] <- '?'
+patients$DLBType[patients$DLBType == 'N/A'] <- '?'
+
 write.csv(x = patients,file = paste(savedir,"patientSample.csv",sep=''))
 
 # Replace Alzheimer's disease with Braak-CERAD scores
@@ -246,17 +278,17 @@ dz.exc <- 'Alzheimer\'s disease'
 n.dx <- 5
 Rem.Mask <- exclude.dz(patients,dz.exc,n.dx) # get mask for all patients meeting Braak-CERAD AD
 
-BraakCERAD <- !Rem.Mask
-# insert.BraakCERAD makes NPDX1 = 'Alzheimer\'s disease' if Braak and CERAD both >1
+ABC <- !Rem.Mask
+# insert.ABC makes NPDX1 = 'Alzheimer\'s disease' if ABC stage is intermediate-high
 # and all other diagnoses are shifted behind it in NPDx2-5
-patients <- insert.BraakCERAD(patients,BraakCERAD)
+patients <- insert.ABC(patients,ABC)
 
-print('Alzheimers in NPDx1 is equal to BraakCERAD mask?')
-print(identical(patients$NPDx1 == dz.exc,BraakCERAD))
+print('Alzheimers in NPDx1 is equal to ABC mask?')
+print(identical(patients$NPDx1 == dz.exc,ABC))
 NPDx.all <- sapply(2:5,function(n) as.character(get(paste0('NPDx',n),patients)))
 print(paste('AD in NPDx2-5:',sum(NPDx.all=='Alzheimer\'s disease',na.rm = T)))
 
-write.csv(x = patients,file = paste(savedir,"patientSampleBraakCERAD.csv",sep=''))
+write.csv(x = patients,file = paste(savedir,"patientSampleABC.csv",sep=''))
 
 # visualize representation of diseases
 p <- ggplot(data = patients,aes(x=NPDx1,fill=NPDx1)) + geom_hline(yintercept = 100,color ='grey')+ 
