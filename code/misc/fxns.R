@@ -140,11 +140,19 @@ other.dz <- function(patientSample,NPDx = 'NPDx1'){
   # index each potential non-Other item in NPDx column with a 'short' name
   long.short.list <- list()
   long.short.list[['Alzheimer\'s disease']] <- 'AD'
+  long.short.list[['ADNC - Low']] <- 'lAD'
+  long.short.list[['ADNC - Intermediate']] <- 'iAD'
+  long.short.list[['ADNC - High']] <- 'hAD'
   long.short.list[['Amyotrophic Lateral Sclerosis']] <- 'ALS'
   long.short.list[['CBD']] <- 'CBD'
   long.short.list[['CTE']] <- 'CTE'
   long.short.list[['FTLD-TDP']] <- 'FTLD'
   long.short.list[['LBD']] <- 'LBD'
+  long.short.list[['LBD - Amygdala']] <- 'aLBD'
+  long.short.list[['LBD - Brainstem']] <- 'bLBD'
+  long.short.list[['LBD - Neocortical']] <- 'nLBD'
+  long.short.list[['LBD - Limbic']] <- 'lLBD'
+  long.short.list[['LBD - ?']] <- 'LBD'
   long.short.list[['Multiple System Atrophy']] <- 'MSA'
   long.short.list[['Other']] <- 'Oth'
   #long.short.list[['Parkinson\'s disease']] <- 'PD'
@@ -152,7 +160,7 @@ other.dz <- function(patientSample,NPDx = 'NPDx1'){
   long.short.list[['PART']] <- 'PART'
   long.short.list[['PSP']] <- 'PSP'
   #long.short.list[['FTLD-Other']] <- 'FTLD-Other'
-  #long.short.list[['Unremarkable adult']] <- 'UA'
+  long.short.list[['Unremarkable adult']] <- 'UA'
 
   # diseases added for NPDx2
   #long.short.list[['Hippocampal Sclerosis']] <- 'HC Scl.'
@@ -208,10 +216,11 @@ exclude.dz.basic <- function(patientSample,dz.exc,n.dx){
 
 
 exclude.dz <- function(patientSample,dz.exc,n.dx){
-  # for dz.exc == Alzheimer's disease, returns a mask of patients with Braak-CERAD scores both < 1
-  # i.e. a mask selecting patients not meeting Braak-CERAD criteria
+  # for dz.exc == Alzheimer's disease, returns a mask of patients with AD status of "low" or "none"
+  # this is determined by Montine et al. 2012 ADNC grid in table 3 for ABC staging, can also be found in data/
+  # i.e. a mask selecting patients who have little to know AD
   # if Braak-CERAD score cannot be determined, we use NPDx Likelihood (subjective pathologist dx as far as I can tell)
-  # instead. This occurs for 58/1389 patients
+  # instead. 
   # for other diseases, this function simply returns a mask selecting patients with low probability or no diagnosis of dz.exc
 
   NPDx <- sapply(1:n.dx, function(i) paste('NPDx',i,sep=''))
@@ -219,21 +228,17 @@ exclude.dz <- function(patientSample,dz.exc,n.dx){
   NPDx <- lapply(NPDx, function(X) X == dz.exc)
 
   if(dz.exc == 'Alzheimer\'s disease'){
-    # find patients with either Braak03 <2 or CERAD < 2 -- these folks don't have real AD    
-    BraakMask <- patientSample$Braak03 < 2 # patients with low Braak scores
-    CERADMask <- patientSample$CERAD < 2 # patients with low CERAD scores
 
-    # only look at people with Braak and CERAD scores present
+    # only look at people with Braak, CERAD, and ABeta scores present
     Rem.Mask <- rep(NA,nrow(patientSample)) # initialize mask to select patients without Braak-CERAD AD
-    Rem.Mask[BraakMask] <- TRUE # if patients have low Braak scores they can't have Braak-CERAD AD
-    Rem.Mask[CERADMask] <- TRUE # if patients have low CERAD scores they can't have Braak-CERAD AD
-    Rem.Mask[!BraakMask & !CERADMask] <- FALSE # if patients have high Braak & CERAD scores they have Braak-CERAD AD
+    Rem.Mask[patientSample$ADStatus == 'Low' | patientSample$ADStatus == 'None'] <- TRUE
+    Rem.Mask[patientSample$ADStatus == 'Intermediate'| patientSample$ADStatus == 'High']  <- FALSE # if patients have high Braak & CERAD scores they have Braak-CERAD AD
     
     # Now all other remaining patients are NAs because they have missing scores
     # This is either patients missing both Braak & CERAD, or with high Braak or CERAD missing the other score
     # such that you cannot rule out Braak-CERAD AD
     # in these 58 patients we will diagnose them with AD based on NPDx1-n.dx having > low probability
-    missingBraakCERAD <- is.na(Rem.Mask)
+    missingABC <- is.na(Rem.Mask)
 
     NPDx.lik <- sapply(1:n.dx, function(i) paste('NPDx',i,'Likelihood',sep=''))
     NPDx.lik <- lapply(NPDx.lik,function(x) get(x,patientSample))
@@ -244,9 +249,9 @@ exclude.dz <- function(patientSample,dz.exc,n.dx){
     Lik.Mask <- Reduce('&',NPDx.comb) # mask selecting patients with only low prob or no diagnosis of dz.exc
     Dz.Mask <- Reduce('|',NPDx)  # mask selecting patients with any diagnosis of dz.exc in NPDx1 to n.dx
 
-    # if missing CERAD or Braak, use subjective likelihood. See ExclusionSanityCheck.R for confusion matrix in non-missing people.
+    # if missing any of ABC criteria, use subjective likelihood. See ExclusionSanityCheck.R for confusion matrix in non-missing people.
 
-    Rem.Mask[missingBraakCERAD] <- Lik.Mask[missingBraakCERAD]
+    Rem.Mask[missingABC] <- Lik.Mask[missingABC]
     return(Rem.Mask)
 
   } else{
