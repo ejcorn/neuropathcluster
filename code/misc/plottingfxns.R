@@ -133,7 +133,7 @@ fix.yscale <- function(p,ymax,n.breaks,i=2){
 
 }
 
-plot.dz.by.cluster <- function(diagnoses,partition,dz.short,clusterColors,leg.lab){
+plot.dz.by.cluster <- function(diagnoses,partition,dz.short,clusterColors,leg.lab,dz.colors=NULL){
   # diagnoses: length n vector of diagnoses 
   # partition: length n vector of cluster membership
   # dz.short: vector of short labels of diseases
@@ -155,7 +155,7 @@ plot.dz.by.cluster <- function(diagnoses,partition,dz.short,clusterColors,leg.la
   th <- 0.05 # only label diseases with > 0.5 % of a cluster
   df.plt$Dz.short[df.plt$pr < th] <- ''
   pal <- colorRampPalette(brewer.pal(name = 'Set3',n=12))
-  dz.colors <- pal(length(unique(df.plt$Dz)))
+  if(is.null(dz.colors)){dz.colors <- pal(length(unique(df.plt$Dz)))} # if colors not provided, auto generate
 
   n.by.cluster <- count.ejc(partition)
   clusterNames <- sapply(1:k, function(k.i) paste('Cluster',k.i))
