@@ -30,7 +30,7 @@ if(params$dist.met == 'spearman'){
   W <- subject.cormat$rho
 }
 
-k.rng <- 2:15
+k.rng <- 2:10
 thresh.rng <- seq(0,0.5,0.1)
 clust.thresh <- lapply(thresh.rng, function(thresh) lapply(k.rng, function(k)  # use 1 - r to make into dissimilarity
   pam(x = 1-thresh.mat(W,'>',thresh),diss = TRUE,k=k)))
@@ -38,11 +38,12 @@ sil.mean <- lapply(clust.thresh, function(clust) sapply(clust,function(K) K$sili
 names(sil.mean)<- thresh.rng
 p.list <- lapply(as.character(thresh.rng),function(t) ggplot() + geom_line(aes(x=k.rng,y=sil.mean[[t]])) + #theme_classic() +
   scale_x_continuous(breaks = k.rng) + scale_y_continuous(limits=c(-0.1,max(unlist(sil.mean)))) +
-    xlab('k') + ylab('Mean Silhouette') + ggtitle(paste('Thresh.',t))+
-    theme(plot.title = element_text(hjust=0.5)))
+    xlab('k') + ylab('Mean Silhouette') + ggtitle(paste('Threshold =',t))+ theme_bw()+
+    theme(text=element_text(size=8))+
+    theme(plot.title = element_text(hjust=0.5),axis.text.x = element_text(size=6),text=element_text(color='black')))
 p <- plot_grid(plotlist = p.list)
 ggsave(filename = paste0(savedir,'PAM_MeanSilhouetteByKByThresh_',params$dist.met,'.pdf'),plot = p,
-       height = 18,width=18,units='cm')
+       height = 12,width=18,units='cm')
 
 # threshold value for which highest silhouette value is achieved at any value of k --
 # this is a parameter that ought to be fit and cross-validated
@@ -56,7 +57,7 @@ for(k in 1:length(clust)){
   clust[[k]]$medoid.matrix <- microSample.imp[-DisconnectedSubjects,][as.numeric(clust[[k]]$medoids),]
 }
 
-p.list <- lapply(clust[which(k.rng <= 6)],function(X) imagesc(t(fliplr(micro.order.by(X$medoid.matrix)))) + 
+p.list <- lapply(clust[which(k.rng <= 6)],function(X) imagesc(t(fliplr(micro.order.by(X$medoid.matrix))),cmap = 'Blues') + 
                    theme(axis.text.y = element_text(size=4,hjust=1,vjust=0.5)))
 p <- plot_grid(plotlist = p.list)
 ggsave(filename = paste0(savedir,'PAMMedoids_',params$dist.met,'.pdf'),plot = p,
@@ -95,8 +96,10 @@ for(k in c(4,6)){
   # save such that gamma.opt parameter can index k
   savedir <- paste0(params$opdir,'results_G',k,'/analyzecluster/')
   dir.create(savedir,recursive = T)
-  save(partition,centroids,k,DisconnectedSubjects,pathItems.labels,thresh.bestsil,centroids,
+  save(partition,centroids,k,DisconnectedSubjects,pathItems.labels,thresh.bestsil,
        file = paste0(savedir,'subjLouvainPartitionReordered.RData'))
 }
 
-
+# medoids <- as.matrix(microSample[-DisconnectedSubjects,][as.numeric(clust[[which(k.rng==k)]]$medoids[cluster.init.reorder]),]) 
+# imagesc(t(medoids),cmap ='Blues')
+# imagesc(t(compute.centroids(microSample[-DisconnectedSubjects,],partition,fxn = 'median')),cmap = 'Blues')
