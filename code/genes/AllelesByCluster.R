@@ -27,7 +27,7 @@ patientSample <- remove.Disconnected.Subjects(patientSample,DisconnectedSubjects
 clusterColors <- getClusterColors(k)
 
 load(file=paste(savedir,'AlleleTablesCluster.RData',sep=''))
-
+print(paste('Genes + Path:',nrow(Allele.Tables[[1]])))
 # run linear model to measure allele-cluster relationship
 results <- betas <- pvals <- deg.freedom <- list()
 for(g.i in names(Allele.Tables)){
@@ -44,7 +44,9 @@ for(g.i in names(Allele.Tables)){
       # results[[g.i]][[k.1]][[k.2]] contains regression for Gene_i 
       # where coefficients represent log odds that cluster is k.1, not k.2, given # of allele_i
       partition <- as.numeric(partitionSample[partitionSample %in% c(k.1,k.2)] == k.1) 
+      #df <- downSample(df.A.p,as.factor(partition))
       m <- summary(glm(partition ~ ., data=df.A.p,family='binomial'))$coef
+      #m <- summary(glm(Class ~ ., data=df,family='binomial'))$coef
       rownames(m)[1] <- colnames(A)[1] #name rows by allele, intercept is WT allele
       results[[g.i]][[k.1]][[k.2]] <- m
       deg.freedom[[g.i]][k.1,k.2] <- length(partition) - nrow(m) # df is n_observations - n_parameters      
@@ -78,15 +80,18 @@ for(g.i in names(pvals)){
 # plot betas
 max.beta <- max(as.vector(unlist(betas)),na.rm = T)
 min.beta <- min(as.vector(unlist(betas)),na.rm = T)
-plots <- list()
+plots <- latex <- list()
 for(g.i in names(betas)){
-  plots[[g.i]] <- list()
+  plots[[g.i]] <- latex[[g.i]] <- list()
   for(a.i in names(betas[[g.i]])){
     plots[[g.i]][[a.i]] <- plot.allele.beta.matrix(betas[[g.i]][[a.i]],pvals[[g.i]][[a.i]],g.i,a.i,min.beta,max.beta,clusterColors)
     list[bmat,pmat] <- list(betas[[g.i]][[a.i]],pvals[[g.i]][[a.i]])
     save(bmat,pmat,file = paste(savedir,'Fig4c-g',g.i,'-',a.i,'_SourceData.RData',sep=''))
+    latex[[g.i]][[a.i]] <- matrix(paste0('$\\beta=',signif(bmat,2),'$, $df=',deg.freedom[[g.i]],'$, $p_\\mathrm{FDR}=',signif(pmat,2),'$'),
+                                  k,k,dimnames = list(clusterNames,clusterNames))
   }
   p.all <- plot_grid(plotlist = plots[[g.i]], align = 'hv',nrow=1)
   ggsave(filename = paste(savedir,g.i,'Betas.pdf',sep=''),plot = p.all,
          height = 6,width=4.5*length(plots[[g.i]]),units='cm')
 }
+

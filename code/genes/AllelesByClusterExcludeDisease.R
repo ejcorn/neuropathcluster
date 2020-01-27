@@ -35,7 +35,7 @@ load(file=paste(savedir,'AlleleTablesCluster.RData',sep=''))
 Rem.Mask <- exclude.dz(patientSample[INDDIDs %in% unique(Genes$INDDID),],dz.exc,n.dx)
 # exclude dz.exc from corresponding cluster with highest representation
 # i.e. Patients without Braak-CERAD AD OR patients not in cluster 2
-Rem.Mask <- Rem.Mask | partitionSample != paste('Cluster',exc.cl) 
+Rem.Mask <- Rem.Mask | !partitionSample %in% paste('Cluster',exc.cl) 
 
 for(g.i in names(Allele.Tables)){
   Allele.Tables[[g.i]] <- Allele.Tables[[g.i]][Rem.Mask,]
@@ -47,12 +47,16 @@ cluster.counts <- cluster.count(partitionSample,k)
 print(paste('Genes: Exclude',dz.exc))
 print(cluster.counts)
 
-# exclude clusters with < 2 members after Rem.Mask application
-Rem.Cl <- cluster.exclude.mask(cluster.counts,partitionSample,n=20)
+# exclude clusters with < 20 members after Rem.Mask application
+Rem.Cl <- cluster.exclude.mask(cluster.counts,partitionSample,n=9)
 # apply mask to relevant variables
 list[clusterColors,clusterNames] <- 
-  lapply(list(clusterColors,clusterNames), function(X) X.n.exclude(X,cluster.counts))
+  lapply(list(clusterColors,clusterNames), function(X) X.n.exclude(X,cluster.counts,n=9))
+k <- length(clusterNames)
 
+for(g.i in names(Allele.Tables)){
+  Allele.Tables[[g.i]] <- Allele.Tables[[g.i]][Rem.Cl,]
+}
 partitionSample <- flexdim.rowmask(partitionSample,Rem.Cl)
 
 print(paste('Exclude',dz.exc,'n =',length(partitionSample)))
@@ -73,6 +77,8 @@ for(g.i in names(Allele.Tables)){
       partition <- as.numeric(partitionSample[partitionSample %in% c(k.1,k.2)] == k.1) 
       m <- summary(glm(partition ~ ., data=df.A.p,family='binomial'))$coef
       rownames(m)[1] <- colnames(A)[1] #name rows by allele, intercept is WT allele
+      # if you couldn't estimate a coefficient because no alleles present, then add a row of NAs
+      if(nrow(m) < ncol(A)){m <- rbind(m,matrix(NA,nrow=1,ncol=ncol(m),dimnames=list(colnames(A)[!colnames(A) %in% rownames(m)],colnames(m))))}
       results[[g.i]][[k.1]][[k.2]] <- m
       deg.freedom[[g.i]][k.1,k.2] <- length(partition) - nrow(m) # df is n_observations - n_parameters
     }
@@ -105,16 +111,18 @@ for(g.i in names(pvals)){
 # plot betas
 max.beta <- max(as.vector(unlist(betas)),na.rm = T)
 min.beta <- min(as.vector(unlist(betas)),na.rm = T)
-plots <- list()
+plots <- latex <- list()
 for(g.i in names(betas)){
-  plots[[g.i]] <- list()
+  plots[[g.i]] <- latex[[g.i]] <- list()
   for(a.i in names(betas[[g.i]])){
     plots[[g.i]][[a.i]] <- plot.allele.beta.matrix(betas[[g.i]][[a.i]],pvals[[g.i]][[a.i]],g.i,a.i,min.beta,max.beta,clusterColors)
     list[bmat,pmat] <- list(betas[[g.i]][[a.i]],pvals[[g.i]][[a.i]])
+    latex[[g.i]][[a.i]] <- matrix(paste0('$\\beta=',signif(bmat,2),'$, $df=',deg.freedom[[g.i]],'$, $p_\\mathrm{FDR}=',signif(pmat,2),'$'),
+                                  k,k,dimnames = list(clusterNames,clusterNames))
     if(dz.exc == 'Alzheimer\'s disease'){save(bmat,pmat,file = paste(savedir,'FigS5c-e',g.i,'-',a.i,'_SourceData.RData',sep=''))}
     if(dz.exc == 'PSP'){save(bmat,pmat,file = paste(savedir,'FigS6a-b',g.i,'-',a.i,'_SourceData.RData',sep=''))}
   }
   p.all <- plot_grid(plotlist = plots[[g.i]], align = 'hv',nrow=1)
-  ggsave(filename = paste(savedir,g.i,'BetasExclude',dz.exc,'NDx',n.dx,'.pdf',sep=''),plot = p.all,
+  ggsave(filename = paste(savedir,g.i,'BetasExclude',dz.exc,'FromC',paste0(exc.cl,collapse=','),'NDx',n.dx,'.pdf',sep=''),plot = p.all,
          height = 2,width=2.5*length(plots[[g.i]]),units='in')
 }

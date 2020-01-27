@@ -47,6 +47,7 @@ CSF.mean <- cbind(data.frame(INDDID=sort(unique(CSF$INDDID))),CSF.mean)
 
 partitionSample <- as.character(partition[INDDIDs %in% unique(CSF.mean$INDDID)])
 partitionSample <- sapply(partitionSample, function(i) paste('Cluster',i))
+print(paste('CSF + Path n =',length(partitionSample)))
 
 CSF.mean <- CSF.mean[,-1]
 
@@ -73,9 +74,9 @@ dev.off()
 # get sample size and effect size
 
 clusterNames <- sort(unique(partitionSample))
-results <- samp.size <- p.vals <- list()
+results <- samp.size <- p.vals <- latex <- list()
 for(CSF.protein in colnames(CSF.mean)){
-  results[[CSF.protein]] <- samp.size[[CSF.protein]] <- p.vals[[CSF.protein]] <- 
+  results[[CSF.protein]] <- samp.size[[CSF.protein]] <- p.vals[[CSF.protein]] <- latex[[CSF.protein]] <-
     matrix(NA,ncol = k, nrow = k,dimnames = list(clusterNames,clusterNames)) 
   # store data in new variables
   CSF.mean.test <- CSF.mean
@@ -87,6 +88,15 @@ for(CSF.protein in colnames(CSF.mean)){
       samp.size[[CSF.protein]][k1,k2] <- sum(partitionSample.test %in% c(k1,k2))
       p.vals[[CSF.protein]][k1,k2] <- m$p.value
     }
-  }  
+  } 
+  p.vals[[CSF.protein]] <- p.vals[[CSF.protein]] * !diag(NA,k) # remove diagonals because they don't correspond to real tests
 }
 p.vals <- list.fdr.correct(p.vals)
+for(CSF.protein in colnames(CSF.mean)){
+  for(k1 in clusterNames){
+    for(k2 in clusterNames){      
+      latex[[CSF.protein]][k1,k2] <- paste0('$M_{',substr(k1,nchar(k1),nchar(k1)),'-',substr(k2,nchar(k2),nchar(k2)),'}=',
+                                              round(results[[CSF.protein]][k1,k2],2),'$, $n=',samp.size[[CSF.protein]][k1,k2],'$, $p_','\\','mathrm{FDR}=',signif(p.vals[[CSF.protein]][k1,k2],2),'$')
+    }
+  }
+}

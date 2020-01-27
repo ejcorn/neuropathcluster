@@ -50,8 +50,8 @@ partitionSample <- sapply(partitionSample, function(i) paste('Cluster',i))
 
 # Remove all pts of certain diseases to see what is driving cluster diffs
 Rem.Mask <- exclude.dz(patientSample[INDDIDs %in% unique(CSF.mean$INDDID),],dz.exc,n.dx)
-# Only remove Braak-CERAD AD from Cluster 2
-Rem.Mask <- Rem.Mask | partitionSample != paste('Cluster',exc.cl)
+# Only remove ABC int-high AD from Cluster 2
+Rem.Mask <- Rem.Mask | !partitionSample %in% paste('Cluster',exc.cl)
 
 partitionSample <- partitionSample[Rem.Mask]
 CSF.mean <- CSF.mean[Rem.Mask,]
@@ -64,7 +64,7 @@ cluster.counts <- cluster.count(partitionSample,k)
 # exclude clusters with < 2 members after Rem.Mask application
 Rem.Cl <- cluster.exclude.mask(cluster.counts,partitionSample)
 # apply mask to relevant variables
-clusterColors <- X.n.exclude(clusterColors,cluster.counts)
+clusterColors <- X.n.exclude(clusterColors,cluster.counts,n=2)
 list[partitionSample,CSF.mean] <- 
   lapply(list(partitionSample,CSF.mean), function(X) flexdim.rowmask(X,Rem.Cl))
 
@@ -90,13 +90,14 @@ p <- ggplot(data=df,aes(x=g,y=y,fill=g)) + geom_boxplot(outlier.size=0.5) + them
 #p <- ggplot_build(p)
 p <- mult.comp.ggpubr(p)
 pdf.options(reset = TRUE, onefile = FALSE)
-pdf(file = paste(savedir,'/CSF',CSF.name,'BoxplotsbyClusterLouvainExclude',dz.exc,'NDx',n.dx,'.pdf',sep=''),height = unit(4,'in'),width=unit(3.5,'in'),useDingbats = F)
+pdf(file = paste(savedir,'/CSF',CSF.name,'BoxplotsbyClusterLouvainExclude',dz.exc,'FromC',paste0(exc.cl,collapse=','),'NDx',n.dx,'.pdf',sep=''),height = unit(4,'in'),width=unit(3.5,'in'),useDingbats = F)
 plot(ggplot_gtable(p))
 dev.off()
 
 # get sample size and effect size
 
 clusterNames <- sort(unique(partitionSample))
+k <- length(clusterNames)
 results <- samp.size <- p.vals <- list()
 for(CSF.protein in colnames(CSF.mean)){
   results[[CSF.protein]] <- samp.size[[CSF.protein]] <- p.vals[[CSF.protein]] <- 
@@ -112,5 +113,6 @@ for(CSF.protein in colnames(CSF.mean)){
       p.vals[[CSF.protein]][k1,k2] <- m$p.value
     }
   }  
+  p.vals[[CSF.protein]] <- p.vals[[CSF.protein]] * !diag(NA,k) # remove diagonals because they don't correspond to real tests
 }
 p.vals <- list.fdr.correct(p.vals)
