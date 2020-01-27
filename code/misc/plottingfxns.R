@@ -180,7 +180,8 @@ plot.allele.beta.matrix <- function(b.mat,p.mat,g.i,a.i,min.beta,max.beta,cluste
     p1 <- ggplot() + 
       geom_tile(data = melted_betas, aes(x=Var1, y=Var2, fill=value)) + xlab("") + ylab("") +
       geom_text(data = melted_p, aes(x=Var1,y=Var2,label=value,color=value!='ns'),size=2.5) +
-      scale_fill_gradientn(colours = c('dark red','#c23b22','white','#779ecb','dark blue'),
+      #scale_fill_gradientn(colours = c('dark red','#c23b22','white','#779ecb','dark blue'),
+      scale_fill_gradientn(colours = c('#8B0000','#c23b22','#ffffff','#779ecb','#00008b'),
       #scale_fill_gradientn(colours = c('white','#779ecb','dark blue'),   # blue
                            values = scales::rescale(c(min.beta,0,max.beta)),
                            guide = "colorbar", limits=c(min.beta,max.beta),
@@ -310,7 +311,7 @@ max.w <- max(melted_w$value)
 
 p1 <- ggplot() + 
     geom_tile(data = melted_w, aes(x=Var1, y=Var2, fill=value)) + xlab("") + ylab("") +
-    scale_fill_gradientn(colours = c('dark red','#c23b22','white','#779ecb','dark blue'),
+    scale_fill_gradientn(colours = c('#8B0000','#c23b22','#ffffff','#779ecb','#00008b'),
                            values = scales::rescale(c(min.w,0,max.w)),
                            guide = "colorbar", limits=c(min.w,max.w),
                            na.value = 'white',name=expression(beta)) +
@@ -397,7 +398,7 @@ imagesc <- function(X,caxis_name='',cmap='plasma',caxis_labels=NULL,clim=c(min(X
   if(cmap =='plasma'){
     p <- p + scale_fill_viridis(option = 'plasma',name=caxis_name,limits=clim,breaks=caxis_breaks,labels=caxis_labels)
   } else if(cmap == 'redblue'){
-    p <- p + scale_fill_gradientn(colours = c('dark red','#c23b22','white','#779ecb','dark blue'),
+    p <- p + scale_fill_gradientn(colours = c('#8B0000','#c23b22','#ffffff','#779ecb','#00008b'),
                            guide = "colorbar", limits=clim,
                            na.value = 'grey',name=caxis_name)
   } else {
