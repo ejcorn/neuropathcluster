@@ -116,7 +116,7 @@ for(g.i in names(betas)){
     p1 <- ggplot() + 
       geom_tile(data = melted_betas, aes(x=Var1, y=Var2, fill=value)) + xlab("") + ylab("") +
       geom_text(data = melted_p, aes(x=Var1,y=Var2,label=value,color=value!='ns'),size=1.5) +
-      scale_fill_gradientn(colours = c('dark red','#c23b22','white','#779ecb','dark blue'),
+      scale_fill_gradientn(colours = c('#8B0000','#c23b22','#ffffff','#779ecb','#00008b'),
                            values = rescale(c(min.beta,0,max.beta)),
                            guide = "colorbar", limits=c(min.beta,max.beta),
                            na.value = 'white',name=expression(beta)) +
