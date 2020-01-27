@@ -62,7 +62,7 @@ melted_cormat$Var1 <- fliplr(melted_cormat$Var1)
 cs.rect <- cumsum(pathItems.rect.idx)
 
 df <- data.frame(xmx = 1+cs.rect, xmi = c(1,1+cs.rect[-length(cs.rect)]))
-pal <- colorRampPalette(c('dark red','#c23b22','white','#779ecb','dark blue'))
+pal <- colorRampPalette(c('#8B0000','#c23b22','#ffffff','#779ecb','#00008b'))
 pal <- pal(100)
 p1 <- ggplot() + 
   geom_tile(data = melted_cormat, aes(x=Var1, y=Var2, fill=value)) + xlab("") + ylab("") +
@@ -119,7 +119,7 @@ df.rect <- data.frame(xmx = 1+cs.rect, xmi = c(1,1+cs.rect[-length(cs.rect)]))
 border.regions <- sapply(c('SN','TS','CS'), function(r) which(fliplr(pathRegions.name)==r))
 df.border <- data.frame(x = df.rect$xmx[border.regions])
 
-pal <- colorRampPalette(c('dark red','#c23b22','white','#779ecb','dark blue'))
+pal <- colorRampPalette(c('#8B0000','#c23b22','#ffffff','#779ecb','#00008b'))
 pal <- pal(100)
 
 p2 <- ggplot() + 

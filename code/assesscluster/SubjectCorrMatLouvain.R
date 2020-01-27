@@ -7,7 +7,7 @@ source('code/misc/fxns.R')
 source('code/misc/plottingfxns.R')
 
 microSample <- read.csv(paste(params$opdir,'processed/microSample.csv',sep=''),stringsAsFactors=F)[,-(1:2)] # Get rid of index column and INDDIDs
-patientSample <- read.csv(paste(params$opdir,'processed/patientSampleBraakCERAD.csv',sep=''))[,-(1:2)] # Get rid of index column and INDDIDs
+patientSample <- read.csv(paste(params$opdir,'processed/patientSampleABC.csv',sep=''),stringsAsFactors=F)[,-(1:2)] # Get rid of index column and INDDIDs
 
 INDDIDs <- read.csv(paste(params$opdir,'processed/microSample.csv',sep=''),stringsAsFactors=F)[,1]
 
@@ -33,7 +33,7 @@ s <- sample(nrow(W),replace = F)
 melted_cormat <- melt(W[s,s])
 melted_cormat$Var1 <- melted_cormat$Var1[length(melted_cormat$Var1):1]
 
-pal <- colorRampPalette(c('dark red','#c23b22','white','#779ecb','dark blue'))
+pal <- colorRampPalette(c('#8B0000','#c23b22','#ffffff','#779ecb','#00008b'))
 pal <- pal(100)
 p1 <- ggplot() + 
   geom_tile(data = melted_cormat, aes(x=Var1, y=Var2, fill=value)) + xlab("") + ylab("") +
