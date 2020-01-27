@@ -132,7 +132,7 @@ other.dz <- function(patientSample,NPDx = 'NPDx1'){
   }
   other <- list('Down\'s syndrome','Schizophrenia',
               'Pathological Aging','FTLD-Other','LATE',
-              'Cerebrovascular Disease','CAA','','Hippocampal Sclerosis','CTE')
+              'Cerebrovascular Disease','CAA','Hippocampal Sclerosis','CTE','Unremarkable adult')
   for(O in other){
     patientSample[,NPDx][patientSample[,NPDx] == O] <- 'Other'
   }
@@ -140,6 +140,7 @@ other.dz <- function(patientSample,NPDx = 'NPDx1'){
   # index each potential non-Other item in NPDx column with a 'short' name
   long.short.list <- list()
   long.short.list[['Alzheimer\'s disease']] <- 'AD'
+  long.short.list[['ADNC - ']] <- '?AD'
   long.short.list[['ADNC - Low']] <- 'lAD'
   long.short.list[['ADNC - Intermediate']] <- 'iAD'
   long.short.list[['ADNC - High']] <- 'hAD'
@@ -160,7 +161,7 @@ other.dz <- function(patientSample,NPDx = 'NPDx1'){
   long.short.list[['PART']] <- 'PART'
   long.short.list[['PSP']] <- 'PSP'
   #long.short.list[['FTLD-Other']] <- 'FTLD-Other'
-  long.short.list[['Unremarkable adult']] <- 'UA'
+  #long.short.list[['Unremarkable adult']] <- 'UA'
 
   # diseases added for NPDx2
   #long.short.list[['Hippocampal Sclerosis']] <- 'HC Scl.'
@@ -430,14 +431,15 @@ get.feature.labels <- function(features.of.interest,all.features){
   return(list(idx=idx,labels=labels))
 }
 
-micro.order.by <- function(micro,by='type'){
+micro.order.by <- function(micro,by='type',vers='original'){
   # INPUTS:
   # micro: subject by feature pathology score matrix
   # by: 'type' or 'region'
+  # vers: original or short names
   #
   # OUTPUTS:
   # micro.reordered: features ordered by region or by type
-  list[pathItems.type,pathRegions.name] <- get.pathscore.names()
+  list[pathItems.type,pathRegions.name] <- get.pathscore.names(vers)
   if(by=='type'){
     labels <- pathItems.type
   } else if(by=='region'){
@@ -481,11 +483,13 @@ region.by.item.matrix <- function(X,fxn='mean',vers = 'short'){
                                  dimnames = list(pathItems.type,pathRegions.name))
   for(region in pathRegions.name){
     for(item in pathItems.type){
-      regionItemMask <- grepl(item,colnames(X)) & grepl(region,colnames(X))
-      #print(paste0(region,'-',item,': ',sum(regionItemMask))) # make sure this process only selects one region
-      if(fxn=='mean'){X.reshape[item,region] <- mean(X[,regionItemMask])}
-      if(fxn=='nanmean'){X.reshape[item,region] <- mean(X[,regionItemMask],na.rm=TRUE)}
-      if(fxn=='median'){X.reshape[item,region] <- median(X[,regionItemMask])}
+      regionItemMask <- grepl(item,colnames(X)) & grepl(paste0(region,'_'),colnames(X))
+      if(sum(regionItemMask)>0){ # if there are any regions, otherwise leave NA
+        #print(paste0(region,'-',item,': ',sum(regionItemMask))) # make sure this process only selects one region
+        if(fxn=='mean'){X.reshape[item,region] <- mean(X[,regionItemMask])}
+        if(fxn=='nanmean'){X.reshape[item,region] <- mean(X[,regionItemMask],na.rm=TRUE)}
+        if(fxn=='median'){X.reshape[item,region] <- median(X[,regionItemMask])}
+    }
     }
   }
 

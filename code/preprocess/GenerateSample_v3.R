@@ -63,6 +63,22 @@ for(C in colnames(micro)[-1]){ # iterate through columns, excluding INDDIDs
   microSample[,C] <- as.numeric(microSample[,C])
 }
 
+# process micro column names corresponding to region and type of pathology
+# names are currently RegionType ... convert to Region_Type in order to unambiguously identify in future
+# also shorten type names for plotting
+list[pathItems.type,pathRegions.name] <- get.pathscore.names()
+list[pathItems.type.short,pathRegions.name.short] <- get.pathscore.names(vers='short')
+cnames <- colnames(microSample)
+newnames <- rep(NA,length(cnames)) # hold new names
+for(type.i in 1:length(pathItems.type)){
+  type <- pathItems.type[[type.i]]
+  type.short <- pathItems.type.short[[type.i]]
+  type.idx <- grep(type,cnames) # where are items of that type located
+  type.startstop <- lapply(cnames[type.idx], function(X) list(st.sp=str_locate_all(X,type)[[1]],nm = X)) # get indices of where type is located within string
+  newnames.tmp <- sapply(type.startstop, function(X) paste0(substr(X$nm,1,X$st.sp[,'start']-1),'_',type.short)) # make new names 
+  if(length(newnames.tmp)>0){colnames(microSample)[type.idx] <- newnames.tmp} # replace existing column names with new names
+}
+
 ############################################################
 ### plot missing data in a region-by-feature type matrix ###
 ############################################################
@@ -79,7 +95,7 @@ ggsave(p,filename = paste0(savedir,'MissingDataRegionTypeAll.pdf'),units= 'in',h
 
 # first remove features with a lot of missing data
 # while prioritizing inclusion of major pathological proteins
-featureTags <- c('Ubiquitin','OC','OFC','MC','DG','Antibody','LC','CBAngiopathy')
+featureTags <- c('Ubiquitin','OC','OFC','MC','DG','Antibody','LC','CB_Angiopathy')
 retainedFeatureMask <- rowSums(sapply(featureTags, function(tag) grepl(tag,colnames(missingMatrix))))==0
 missingMatrix.reshape <- region.by.item.matrix(missingMatrix[,retainedFeatureMask])
 p<-imagesc(missingMatrix.reshape)
@@ -149,22 +165,6 @@ patientMask <- Reduce("+",patientMask) == 0 & !patients$NPDx1 == ''
 
 microSample <- microSample[patientMask,]
 patients <- patients[patientMask,]
-
-# process micro column names corresponding to region and type of pathology
-# names are currently RegionType ... convert to Region_Type in order to unambiguously identify in future
-# also shorten type names for plotting
-list[pathItems.type,pathRegions.name] <- get.pathscore.names()
-list[pathItems.type.short,pathRegions.name.short] <- get.pathscore.names(vers='short')
-cnames <- colnames(microSample)
-newnames <- rep(NA,length(cnames)) # hold new names
-for(type.i in 1:length(pathItems.type)){
-  type <- pathItems.type[[type.i]]
-  type.short <- pathItems.type.short[[type.i]]
-  type.idx <- grep(type,cnames) # where are items of that type located
-  type.startstop <- lapply(cnames[type.idx], function(X) list(st.sp=str_locate_all(X,type)[[1]],nm = X)) # get indices of where type is located within string
-  newnames.tmp <- sapply(type.startstop, function(X) paste0(substr(X$nm,1,X$st.sp[,'start']-1),'_',type.short)) # make new names 
-  if(length(newnames.tmp)>0){colnames(microSample)[type.idx] <- newnames.tmp} # replace existing column names with new names
-}
 
 # save micro sample
 write.csv(x = microSample,file = paste(savedir,"microSample.csv",sep=''))
@@ -270,13 +270,20 @@ patients$DLBType[is.na(patients$DLBType)] <- '?'
 patients$DLBType[patients$DLBType == ''] <- '?'
 patients$DLBType[patients$DLBType == 'N/A'] <- '?'
 
+# x<- grepl.npdx(patients,'LBD',5)
+# patients$DLBType[x]
+# MissingDLBType <- patients[x & !patients$DLBType %in% c('Neocortical','Brainstem','Amygdala','Limbic'),]
+# write.csv(x=MissingDLBType,row.names = F,file = paste0(savedir,'MissingDLBType_EJC012420.csv'))
+# JR.LBD <- read.csv('data/LBD cases 1-23-2020.csv',stringsAsFactors = F)
+# sum(JR.LBD$INDDID %in% MissingDLBType$INDDID)
+
 write.csv(x = patients,file = paste(savedir,"patientSample.csv",sep=''))
 
-# Replace Alzheimer's disease with Braak-CERAD scores
+# Make a separate patient sample where NPDx1 contains Alzheimer's disease wherever a patient has Int/High ABC sstage
 
 dz.exc <- 'Alzheimer\'s disease'
 n.dx <- 5
-Rem.Mask <- exclude.dz(patients,dz.exc,n.dx) # get mask for all patients meeting Braak-CERAD AD
+Rem.Mask <- exclude.dz(patients,dz.exc,n.dx) # get mask for all patients with ABC stage int-high
 
 ABC <- !Rem.Mask
 # insert.ABC makes NPDX1 = 'Alzheimer\'s disease' if ABC stage is intermediate-high

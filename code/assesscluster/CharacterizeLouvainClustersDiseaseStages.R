@@ -9,7 +9,7 @@ source('code/misc/fxns.R')
 source('code/misc/plottingfxns.R')
 
 microSample <- read.csv(paste(params$opdir,'processed/microSample.csv',sep=''),stringsAsFactors=F)[,-(1:2)] # Get rid of index column and INDDIDs
-patientSample <- read.csv(paste(params$opdir,'processed/patientSampleABC.csv',sep=''),stringsAsFactors = F)[,-(1:2)] # Get rid of index column and INDDIDs
+patientSample <- read.csv(paste(params$opdir,'processed/patientSample.csv',sep=''),stringsAsFactors = F)[,-(1:2)] # Get rid of index column and INDDIDs
 
 INDDIDs <- read.csv(paste(params$opdir,'processed/microSample.csv',sep=''),stringsAsFactors=F)[,2]
 
@@ -96,7 +96,8 @@ ggsave(filename = paste(savedir,'ClustersByPrimaryDiseaseStages.pdf',sep=''),plo
 #save(df.plt2e,file = paste(savedir,'Fig2e_SourceData.RData',sep=''))
 
 # now isolate patients with high or intermediate ADNC and plot by secondary diagnoses
-AD.mask <- patientSample$ADStatus %in% c('High','Intermediate') 
+#AD.mask <- patientSample$ADStatus %in% c('High','Intermediate') 
+AD.mask <- patientSample$NPDx1 %in% c('ADNC - Intermediate','ADNC - High')
 partition.AD <- partition[AD.mask]
 patientSample.AD <- patientSample[AD.mask,]
 patientSample.AD$NPDx2[patientSample.AD$NPDx2 == ''] <- 'None' # label empty NPDx2 as none
