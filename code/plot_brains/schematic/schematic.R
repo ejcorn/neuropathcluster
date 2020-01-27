@@ -54,7 +54,7 @@ ggsave(plot=p,filename = 'mock_datamatrix.pdf',units='cm',width=5.75,height=4.75
 
 X.r <- melt(t(cor(X)))
 p <- ggplot(data=X.r,aes(x=Var1,y=Var2,fill=value)) + geom_tile() +
-  scale_fill_gradientn(colours = c('dark red','#c23b22','white','#779ecb','dark blue'),
+  scale_fill_gradientn(colours = c('#8B0000','#c23b22','#ffffff','#779ecb','#00008b'),
                        values = rescale(c(-1,0,1)), guide = "colorbar",limits=c(-1,1),breaks = c(-1,0,1),name='r') +
   ylab('') + xlab('') + coord_fixed() +
   theme(axis.line = element_blank(),axis.ticks=element_blank(),
