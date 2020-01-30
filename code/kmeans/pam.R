@@ -36,14 +36,6 @@ clust.thresh <- lapply(thresh.rng, function(thresh) lapply(k.rng, function(k)  #
   pam(x = 1-thresh.mat(W,'>',thresh),diss = TRUE,k=k)))
 sil.mean <- lapply(clust.thresh, function(clust) sapply(clust,function(K) K$silinfo$avg.width))
 names(sil.mean)<- thresh.rng
-p.list <- lapply(as.character(thresh.rng),function(t) ggplot() + geom_line(aes(x=k.rng,y=sil.mean[[t]])) + #theme_classic() +
-  scale_x_continuous(breaks = k.rng) + scale_y_continuous(limits=c(-0.1,max(unlist(sil.mean)))) +
-    xlab('k') + ylab('Mean Silhouette') + ggtitle(paste('Threshold =',t))+ theme_bw()+
-    theme(text=element_text(size=8))+
-    theme(plot.title = element_text(hjust=0.5),axis.text.x = element_text(size=6),text=element_text(color='black')))
-p <- plot_grid(plotlist = p.list)
-ggsave(filename = paste0(savedir,'PAM_MeanSilhouetteByKByThresh_',params$dist.met,'.pdf'),plot = p,
-       height = 12,width=18,units='cm')
 
 # threshold value for which highest silhouette value is achieved at any value of k --
 # this is a parameter that ought to be fit and cross-validated
@@ -73,21 +65,21 @@ reordering.features <- list('6'=list(c('Tau','CP_Thio','GP_Thio','TS_Thio'),
                                      c('Amyg_Tau','CS_Tau','Angiopathy'),c('TDP43'),
                                      c('SN_Gliosis','SN_NeuronLoss'),
                                      c('Syn','Tau'),unlist(pathItems.type)),
-                                     '4'=c('CB_Tau','Thio','TDP43','Syn')) 
+                                     '4'=c('CB_Tau','Thio','TDP43','Syn'))
 
-for(k in c(4,6)){
+for(k in k.rng){
   partition <- unname(clust[[which(k.rng==k)]]$cluster)
   centroids <- compute.centroids(microSample[-DisconnectedSubjects,],partition)
-  
-  cluster.init.reorder <- order.cluster.by.feature.old(microSample,centroids,
-                                                       reordering.features[[as.character(k)]],
-                                                       max.min = c(rep('max',5),'min'))
-  
-  # only reorder if you can make a unique match for each cluster
-  if(length(unique(cluster.init.reorder)) == length(cluster.init.reorder) & length(cluster.init.reorder) == length(unique(partition))){
-    partition <- reorder.partition(partition,cluster.init.reorder)
+  if(k %in% names(reordering.features)){
+    cluster.init.reorder <- order.cluster.by.feature.old(microSample,centroids,
+                                                         reordering.features[[as.character(k)]],
+                                                         max.min = c(rep('max',5),'min'))
+    
+    # only reorder if you can make a unique match for each cluster
+    if(length(unique(cluster.init.reorder)) == length(cluster.init.reorder) & length(cluster.init.reorder) == length(unique(partition))){
+      partition <- reorder.partition(partition,cluster.init.reorder)
+    }
   }
-  
   centroids <- compute.centroids(microSample[-DisconnectedSubjects,],partition)
   
   # using medoids and calling them centroids so variable names match up for subsequent scripts
