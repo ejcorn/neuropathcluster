@@ -158,10 +158,11 @@ plot.dz.by.cluster <- function(diagnoses,partition,dz.short,clusterColors,leg.la
   if(is.null(dz.colors)){dz.colors <- pal(length(unique(df.plt$Dz)))} # if colors not provided, auto generate
 
   n.by.cluster <- count.ejc(partition)
-  clusterNames <- sapply(1:k, function(k.i) paste('Cluster',k.i))
+  clusterNames <- paste('Cluster',1:k)
   p.k.dz <- ggplot(data=df.plt) + geom_col(aes(x=cl,y=pr,fill=Dz),position=position_stack(1)) +
     geom_text(aes(x=cl,y=pr,label=Dz.short,group = Dz),position=position_stack(vjust=.5),size=1.5) +
     annotate(geom='text',x=clusterNames,y=rep(1.1,k),label=paste('',n.by.cluster,sep='\n'),size=1.5)+
+    scale_x_discrete(limits=clusterNames) +
     scale_y_continuous(expand=c(0,0)) + xlab('') + ylab('Proportion') +
     scale_fill_manual(values = dz.colors,name=leg.lab) +
     theme_classic() + theme(text = element_text(size=6),legend.key.size = unit(0.01,'in')) +
@@ -266,11 +267,17 @@ get.continuous.mask <- function(x){
   return(sapply(1:ncol(x), function(i) length(unique(x[,i]))) > 3)
 }
 
-plot.featureweights.lm.contintsplit <- function(res,df,colors,ttl = 'Feature Weights'){
+plot.featureweights.lm.contintsplit <- function(res,df,colors,ttl = 'Feature Weights',rel_widths=c(1,1)){
   # plot feature weight heat map, separating continuous predictors (i.e. CSF) 
   # from interval predictors (i.e. allele counts)
-
   # identify continuous predictors
+
+  # res: list of results from predictive modeling over k-fold repetitions and folds
+  # df: data frame containing predictor variables for modeling
+  # colors: colors for groups, should correspond to diseases and clusters, which should be present in names of res
+  # ttl: title for plots
+  # rel_widths: if there are both continuous and interval predictors, specify the relative widths. defaults to even
+  
 
   cont.mask <- get.continuous.mask(df[,-1]) # remove INDDID column, get continuous predictors
   n.cont <- sum(cont.mask)
@@ -284,10 +291,10 @@ plot.featureweights.lm.contintsplit <- function(res,df,colors,ttl = 'Feature Wei
   # the two are not comparable at all and thus should not be plotted on the same color axis
 
   if(n.cont < n.pred & n.cont > 0){ # if there are both interval and continuous predictors
-    p.cont <- plot.featureweights.lm(weight[,cont.mask],colors,ttl)
-    p.int <- plot.featureweights.lm(weight[,!cont.mask],colors,ttl)
+    p.cont <- plot.featureweights.lm(weight[,cont.mask,drop=FALSE],colors,ttl)
+    p.int <- plot.featureweights.lm(weight[,!cont.mask,drop=FALSE],colors,ttl)
 
-    p.all <- plot_grid(plotlist = list(p.cont,p.int), align = 'hv',nrow=1,axis = 'b')
+    p.all <- plot_grid(plotlist = list(p.cont,p.int), align = 'hv',nrow=1,axis = 'b',rel_widths = rel_widths)
     return(p.all)
   } else if(n.cont == n.pred){ # if there are only continuous predictors
     # i.e. csf only
@@ -345,7 +352,7 @@ plot.featureweights.rf <- function(res,colors,ttl = 'Feature Weights'){
                              na.value = 'white',name=expression(delta)) +
       ggtitle(ttl) + theme_classic() + 
       theme(text = element_text(size=8), plot.title = element_text(hjust=0.5),
-      legend.key.size=unit(0.4,'cm'),axis.text.x = element_text(hjust=0.5,vjust=0.5,angle=90),
+      legend.key.size=unit(0.4,'cm'),axis.text.x = element_text(hjust=1,vjust=0.5,angle=90),
       axis.text.y = element_text(color=colors), plot.margin = unit(c(0, 0, 0, 0), "cm"))
 
   return(p1)

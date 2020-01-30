@@ -20,11 +20,10 @@ pal <- colorRampPalette(brewer.pal(name = 'Set3',n=12))
 dz.colors <- pal(length(dz.short)) # assign a color to each disease
 dz.colors <- dz.colors[dz.short %in% names(dz.res)] # select only diseases included in analysis
 
-if(grepl('CSFGene',extralab)){
-	pal <- colorRampPalette(brewer.pal(name = 'Blues',n=9))
-	dz.colors <- pal(9)[c(3,6,9)] # pick good range of blues
+if(grepl('CSFOnly',extralab) | grepl('CSFGene',extralab)){
+  pal <- colorRampPalette(brewer.pal(name = 'Blues',n=9))
+  dz.colors <- pal(9)[3:(3+length(dz.res)-1)] # pick good range of blues
 }
-
 
 met <- lapply(dz.res, function(a) sapply(a, function(c) c$Sensitivity))
 p.sen.d <- plot.model.perf.met(met=met,perf.met='Test Sensitivity',ttl='',colors = dz.colors)
@@ -52,22 +51,20 @@ p.roc.c <- plot.model.roc(met=cluster.res,ttl='',colors=clusterColors)
 p.fw.c <- plot.featureweights.rf(cluster.res,clusterColors)
 
 # align all plots
-p.d <- plot_grid(plotlist = 
-	list(p.sen.d,remove.y.ticklabels(p.spec.d),remove.y.ticklabels(p.auc.d),p.roc.d,p.fw.d),
-	align = 'h',nrow=1,axis = 'b',
-		rel_widths = c(1.2,1,1,1,1.2))
-p.c <- plot_grid(plotlist =
-		list(p.sen.c,remove.y.ticklabels(p.spec.c),remove.y.ticklabels(p.auc.c),p.roc.c,p.fw.c),
-		align = 'h',nrow=1,axis = 'b',
-		rel_widths = c(1.2,1,1,1,1.2),
+p.d.list  <- list(p.sen.d,remove.y.ticklabels(p.spec.d),remove.y.ticklabels(p.auc.d),p.roc.d,p.fw.d)
+p.d <- plot_grid(plotlist = p.d.list,align = 'h',nrow=1,axis = 'b',rel_widths = c(1.2,1,1,1,1.2))
+p.c.list <- list(p.sen.c,remove.y.ticklabels(p.spec.c),remove.y.ticklabels(p.auc.c),p.roc.c,p.fw.c)
+p.c <- plot_grid(plotlist = p.c.list,align = 'h',nrow=1,axis = 'b',rel_widths = c(1.2,1,1,1,1.2),
 		rel_heights = c(rep(4,4),0.1))
 p.all <- plot_grid(plotlist= list(p.d,p.c), align = 'hv',nrow = 2,axis='b',
 		rel_heights = c(1.2,1))
 
+w.multiplier <- 1; h.multiplier <- 1
+if(grepl('CSFGene',extralab)){w.multiplier <- 1.22; h.multiplier <- 0.88}
 ggsave(filename = paste(savedir,'RFPerformanceClustersDisease',extralab,'.pdf',sep=''),plot = p.all,
-       height = 14,width=18,units='cm')
+       height = 14*h.multiplier,width=19*w.multiplier,units='cm')
 
 if(grepl('CSFGene',extralab)){
-	save(dz.res,file = paste(savedir,'FigS8a-b_',extralab,'SourceData.RData',sep=''))
-	save(cluster.res,file = paste(savedir,'FigS8c-d_',extralab,'SourceData.RData',sep=''))
+  FigS8ad <- lapply(c(p.d.list,p.c.list),function(X) X$data)
+	save(FigS8ad,file = paste(savedir,'FigS8a-d_',extralab,'SourceData.RData',sep=''))
 }

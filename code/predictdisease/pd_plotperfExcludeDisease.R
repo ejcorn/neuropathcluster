@@ -17,41 +17,66 @@ load(file = paste(params$resultsdir,'analyzecluster/subjLouvainPartitionReordere
 clusterColors <- getClusterColors(k)
 
 load(file = paste(savedir,'predictcluster_GLMperf',extralab,'.RData',sep=''))
+load(file = paste(savedir,'predictdz_GLMperf',extralab,'.RData',sep=''))
+pal <- colorRampPalette(brewer.pal(name = 'Blues',n=9))
+dz.colors <- pal(9)[3:(3+length(dz.res)-1)] # pick good range of blues
 
-met <- lapply(cluster.res, function(a) sapply(a, function(c) c$Sensitivity))
-p.sen <- plot.model.perf.met(met=met,perf.met='Test Sensitivity',ttl='',colors = clusterColors)
-met <- lapply(cluster.res, function(a) sapply(a, function(c) c$Specificity))
-p.spec <- plot.model.perf.met(met=met,perf.met='Test Specificity',ttl='',colors = clusterColors)
-met <- lapply(cluster.res, function(a) sapply(a, function(c) c$AUC))
-p.auc <- plot.model.perf.met(met=met,perf.met='Test AUC',ttl='',colors = clusterColors)
-p.roc <- plot.model.roc(met=cluster.res,ttl='',colors=clusterColors)
-
-p.all <- plot_grid(plotlist = 
-	list(p.sen,remove.y.ticklabels(p.spec),remove.y.ticklabels(p.auc),p.roc),
-	align = 'h',nrow=1,axis = 'b',
-		rel_widths = c(1.2,1,1,1))
-
-if(extralab == "CSFOnlyExcludeAlzheimer's disease"){
-	save(cluster.res,file = paste(savedir,'FigS11a-b_',extralab,'SourceData.RData',sep=''))
+setups <- list(Clusters=list(colors=clusterColors,res=cluster.res),
+     Diseases=list(colors=dz.colors,res=dz.res))
+for(setup in names(setups)){
+  setup <- setups[[setup]] # run through set ups
+  colors.setup <- setup$colors # extract colors
+  res <- setup$res  # extract data
+  
+  met <- lapply(res, function(a) sapply(a, function(c) c$Sensitivity))
+  p.sen <- plot.model.perf.met(met=met,perf.met='Test Sensitivity',ttl='',colors = colors.setup)
+  met <- lapply(res, function(a) sapply(a, function(c) c$Specificity))
+  p.spec <- plot.model.perf.met(met=met,perf.met='Test Specificity',ttl='',colors = colors.setup)
+  met <- lapply(res, function(a) sapply(a, function(c) c$AUC))
+  p.auc <- plot.model.perf.met(met=met,perf.met='Test AUC',ttl='',colors = colors.setup)
+  p.roc <- plot.model.roc(met=res,ttl='',colors=colors.setup)
+  
+  p.list <- list(p.sen,remove.y.ticklabels(p.spec),remove.y.ticklabels(p.auc),p.roc)
+  p.all <- plot_grid(plotlist = p.list, align = 'h',nrow=1,axis = 'b',rel_widths = c(1.2,1,1,1))
+  
+  if(extralab == "CSFOnlyExcludeAlzheimer's disease"){
+    if(setup == 'Clusters'){
+      FigS11ab <- lapply(p.list,function(X) X$data)
+  	  save(FigS11ab,file = paste(savedir,'FigS11a-b_',extralab,'SourceData.RData',sep=''))
+    } else if(setup == 'Diseases'){
+      FigS11cd <- lapply(p.list,function(X) X$data)
+      save(FigS11cd,file = paste(savedir,'FigS11c-d_',extralab,'SourceData.RData',sep=''))
+    }
+  }
+  
+  ggsave(filename = paste(savedir,'GLMPerformance',setup,extralab,'FromC',paste0(exc.cl,collapse=','),'NDx',n.dx,'.pdf',sep=''),plot = p.all,
+         height = 5,width=18,units='cm')
 }
 
-ggsave(filename = paste(savedir,'GLMPerformanceClusters',extralab,'FromC',paste0(exc.cl,collapse=','),'NDx',n.dx,'.pdf',sep=''),plot = p.all,
-       height = 5,width=18,units='cm')
 
 load(file = paste(savedir,'predictcluster_RFperf',extralab,'.RData',sep=''))
+load(file = paste(savedir,'predictdz_RFperf',extralab,'.RData',sep=''))
+setups <- list(Clusters=list(colors=clusterColors,res=cluster.res),
+               Diseases=list(colors=dz.colors,res=dz.res))
 
-met <- lapply(cluster.res, function(a) sapply(a, function(c) c$Sensitivity))
-p.sen <- plot.model.perf.met(met=met,perf.met='Test Sensitivity',ttl='',colors = clusterColors)
-met <- lapply(cluster.res, function(a) sapply(a, function(c) c$Specificity))
-p.spec <- plot.model.perf.met(met=met,perf.met='Test Specificity',ttl='',colors = clusterColors)
-met <- lapply(cluster.res, function(a) sapply(a, function(c) c$AUC))
-p.auc <- plot.model.perf.met(met=met,perf.met='Test AUC',ttl='',colors = clusterColors)
-p.roc <- plot.model.roc(met=cluster.res,ttl='',colors=clusterColors)
-
-p.all <- plot_grid(plotlist = 
-	list(p.sen,remove.y.ticklabels(p.spec),remove.y.ticklabels(p.auc),p.roc),
-	align = 'h',nrow=1,axis = 'b',
-		rel_widths = c(1.2,1,1,1))
-
-ggsave(filename = paste(savedir,'RFPerformanceClusters',extralab,'FromC',paste0(exc.cl,collapse=','),'NDx',n.dx,'.pdf',sep=''),plot = p.all,
-       height = 5,width=18,units='cm')
+for(setup in names(setups)){
+  setup <- setups[[setup]] # run through set ups
+  colors.setup <- setup$colors # extract colors
+  res <- setup$res  # extract data
+  
+  met <- lapply(cluster.res, function(a) sapply(a, function(c) c$Sensitivity))
+  p.sen <- plot.model.perf.met(met=met,perf.met='Test Sensitivity',ttl='',colors = clusterColors)
+  met <- lapply(cluster.res, function(a) sapply(a, function(c) c$Specificity))
+  p.spec <- plot.model.perf.met(met=met,perf.met='Test Specificity',ttl='',colors = clusterColors)
+  met <- lapply(cluster.res, function(a) sapply(a, function(c) c$AUC))
+  p.auc <- plot.model.perf.met(met=met,perf.met='Test AUC',ttl='',colors = clusterColors)
+  p.roc <- plot.model.roc(met=cluster.res,ttl='',colors=clusterColors)
+  
+  p.all <- plot_grid(plotlist = 
+  	list(p.sen,remove.y.ticklabels(p.spec),remove.y.ticklabels(p.auc),p.roc),
+  	align = 'h',nrow=1,axis = 'b',
+  		rel_widths = c(1.2,1,1,1))
+  
+  ggsave(filename = paste(savedir,'RFPerformance',setup,extralab,'FromC',paste0(exc.cl,collapse=','),'NDx',n.dx,'.pdf',sep=''),plot = p.all,
+         height = 5,width=18,units='cm')
+}

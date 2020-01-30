@@ -53,34 +53,30 @@ p.roc.c <- plot.model.roc(met=cluster.res,ttl='',colors=clusterColors)
 p.fw.c <- plot.featureweights.lm.contintsplit(cluster.res,df,clusterColors)
 
 # align all plots
-p.d <- plot_grid(plotlist = 
-	list(p.sen.d,remove.y.ticklabels(p.spec.d),remove.y.ticklabels(p.auc.d),p.roc.d,p.fw.d),
-	align = 'h',nrow=1,axis = 'b',
-		rel_widths = c(1.2,1,1,1,1.2))
-p.c <- plot_grid(plotlist =
-		list(p.sen.c,remove.y.ticklabels(p.spec.c),remove.y.ticklabels(p.auc.c),p.roc.c,p.fw.c),
-		align = 'h',nrow=1,axis = 'b',
-		rel_widths = c(1.2,1,1,1,1.2),
-		rel_heights = c(rep(4,4),0.1))
+p.d.list <- list(p.sen.d,remove.y.ticklabels(p.spec.d),remove.y.ticklabels(p.auc.d),p.roc.d,p.fw.d)
+p.d <- plot_grid(plotlist = p.d.list,align = 'h',nrow=1,axis = 'b',rel_widths = c(1.2,1,1,1,1.2))
+p.c.list <- list(p.sen.c,remove.y.ticklabels(p.spec.c),remove.y.ticklabels(p.auc.c),p.roc.c,p.fw.c)
+p.c <- plot_grid(plotlist = p.c.list,align = 'h',nrow=1,axis = 'b',rel_widths = c(1.2,1,1,1,1.2),
+                 rel_heights = c(rep(4,4),0.1))
 rel_heights <- c(1.2,1) #rel_heights <- c(1,1.05)
-if(extralab == 'GeneOnly'){rel_heights <- c(1.2,1)}
+if(grepl('GeneOnly',extralab)){rel_heights <- c(1.2,1)}
 p.all <- plot_grid(plotlist= list(p.d,p.c), align = 'hv',nrow = 2,axis='b',
 		rel_heights = rel_heights)
 
-w.multiplier <- 1
-if(grepl('CSFGene',extralab)){w.multiplier <- 1.22}
+w.multiplier <- 1; h.multiplier <- 1
+if(grepl('CSFGene',extralab) | grep('GeneOnly',extralab)){w.multiplier <- 1.22; h.multiplier <- 0.75}
 ggsave(filename = paste(savedir,'GLMPerformanceClustersDisease',extralab,'.pdf',sep=''),plot = p.all,
-       height = 14,width=19*w.multiplier,units='cm')
+       height = 14*h.multiplier,width=19*w.multiplier,units='cm')
 
 if(grepl('CSFOnly',extralab)){
-	save(dz.res,file = paste(savedir,'Fig5a-b_',extralab,'SourceData.RData',sep=''))
-	save(cluster.res,file = paste(savedir,'Fig5c-d_',extralab,'SourceData.RData',sep=''))
+  FigS5ad <- lapply(c(p.d.list,p.c.list),function(X) X$data)
+  save(FigS5ad,file = paste(savedir,'Fig5a-d_',extralab,'SourceData.RData',sep=''))
 }
 if(grepl('CSFGene',extralab)){
-	save(dz.res,file = paste(savedir,'FigS7a,d_',extralab,'SourceData.RData',sep=''))
-	save(cluster.res,file = paste(savedir,'FigS7b,c_',extralab,'SourceData.RData',sep=''))
+  FigS7ad <- lapply(c(p.d.list,p.c.list),function(X) X$data)
+	save(FigS7ad,file = paste(savedir,'FigS7a-d_',extralab,'SourceData.RData',sep=''))
 }
 if(grepl('GeneOnly',extralab)){
-	save(dz.res,file = paste(savedir,'FigS10a-b_',extralab,'SourceData.RData',sep=''))
-	save(cluster.res,file = paste(savedir,'FigS10c-d_',extralab,'SourceData.RData',sep=''))
+	FigS10ad <- lapply(c(p.d.list,p.c.list),function(X) X$data)
+  save(FigS10ad,file = paste(savedir,'FigS10ad_',extralab,'SourceData.RData',sep=''))
 }
