@@ -85,28 +85,45 @@ for(type.i in 1:length(pathItems.type)){
 
 missingMatrix <- is.na(microSample[,-1])
 patients$AutopsyDate <- as.Date(patients$AutopsyDate,format = '%m/%d/%Y')
-p <- ggplot() + geom_point(aes(x=patients$AutopsyDate[patients$INDDID %in% microSample$INDDID],y=rowSums(missingMatrix))) + 
-  xlab('Autopsy Date') + ylab('Missing Features') + theme_classic()
-ggsave(p,filename = paste0(savedir,'MissingDataByAutopsyDate.pdf'),units= 'in',height = 4.5,width=4.5)
-
-missingMatrix.reshape <- region.by.item.matrix(missingMatrix)
-p <- imagesc(missingMatrix.reshape)
-ggsave(p,filename = paste0(savedir,'MissingDataRegionTypeAll.pdf'),units= 'in',height = 4.5,width=4.5)
-
-# first remove features with a lot of missing data
-# while prioritizing inclusion of major pathological proteins
-featureTags <- c('Ubiquitin','OC','OFC','MC','DG','Antibody','LC','CB_Angiopathy')
-retainedFeatureMask <- rowSums(sapply(featureTags, function(tag) grepl(tag,colnames(missingMatrix))))==0
-missingMatrix.reshape <- region.by.item.matrix(missingMatrix[,retainedFeatureMask])
-p<-imagesc(missingMatrix.reshape)
-ggsave(p,filename = paste0(savedir,'MissingDataRegionTypeExcluded.pdf'),units= 'in',height = 4.5,width=4.5)
-
-microSample <- microSample[,c(TRUE,retainedFeatureMask)] # add TRUE to keep INDDID column
+date.breaks.p <- seq.Date(as.Date('1990/01/01'),as.Date('2020/01/01'),by = '5 years')
+df.plot <- data.frame(x=patients$AutopsyDate[patients$INDDID %in% microSample$INDDID],y=rowSums(missingMatrix))
+p <- ggplot() + geom_vline(xintercept = as.Date('2007/01/01'),linetype='dashed',color='grey70')+
+  geom_point(aes(x=x,y=y),alpha=0.5,stroke=0,size=0.75) + 
+  scale_x_date(breaks=date.breaks.p,labels = year(date.breaks.p))+
+  xlab('Autopsy Date') + ylab('Missing Features') + theme_classic() +
+  theme(text=element_text(size=8),axis.text.x = element_text(angle=90,hjust=1,vjust=0.5))
+ggsave(p,filename = paste0(savedir,'MissingDataByAutopsyDate.pdf'),units= 'cm',height = 4.5,width=4.5)
+save(df.plot, file=paste(savedir,'FigS1a_SourceData.RData',sep=''))
 
 # remove pre 2007 cases
 date.thresh <- as.Date('01/01/2007',format='%m/%d/%Y') 
 INDDIDs.pre2007 <- patients$INDDID[patients$AutopsyDate < date.thresh]
 microSample <- microSample[!microSample$INDDID %in% INDDIDs.pre2007,]
+missingMatrix <- is.na(microSample[,-1])
+
+missingMatrix.reshape <- region.by.item.matrix(missingMatrix)
+clim <- c(0,max(100*missingMatrix.reshape,na.rm=T))
+p <- imagesc(100*missingMatrix.reshape,cmap='Blues',clim = clim) + ggtitle('Missing Data (% Subjects)')+
+  theme(text=element_text(size=6),axis.text.x = element_text(angle=90,hjust=1,vjust=0.5),plot.title = element_text(hjust=0.5,size=6)) + nice_cbar() 
+ggsave(p,filename = paste0(savedir,'MissingDataRegionTypeAll.pdf'),units= 'cm',height = 4.5,width=5.3)
+save(missingMatrix.reshape, file=paste(savedir,'FigS1b_SourceData.RData',sep=''))
+
+# Look at the above plot. You will see that data is ubiquitously missing from a set of
+# regions and types of features moreso than other features. They are:
+# 'Ubiquitin','OC','OFC','MC','DG','Antibody', and 'LC'
+# Additionally, 'CB_Angiopathy' has a lot of missing data
+# These features will be excluded in the next step
+
+featureTags <- c('Ubiquitin','OC','OFC','MC','DG','Antibody','LC','CB_Angiopathy')
+retainedFeatureMask <- rowSums(sapply(featureTags, function(tag) grepl(tag,colnames(missingMatrix))))==0
+missingMatrix.reshape <- region.by.item.matrix(missingMatrix[,retainedFeatureMask])
+clim <- c(0,max(100*missingMatrix.reshape,na.rm=T))
+p<-imagesc(100*missingMatrix.reshape,cmap='Blues',clim=clim) + ggtitle('Missing Data (% Subjects)')+
+  theme(text=element_text(size=6),axis.text.x = element_text(angle=90,hjust=1,vjust=0.5),plot.title = element_text(hjust=0.5,size=6)) + nice_cbar() 
+ggsave(p,filename = paste0(savedir,'MissingDataRegionTypeExcluded.pdf'),units= 'cm',height = 4.5,width=5.3)
+save(missingMatrix.reshape, file=paste(savedir,'FigS1c_SourceData.RData',sep=''))
+
+microSample <- microSample[,c(TRUE,retainedFeatureMask)] # add TRUE to keep INDDID column
 
 #########################################################################
 ### look at characteristic of subject retention vs. feature retention ###
@@ -115,11 +132,12 @@ microSample <- microSample[!microSample$INDDID %in% INDDIDs.pre2007,]
 DataRepresentation <- sapply(seq(0,1,length.out = 100), function(i) sum((rowSums(is.na(microSample)) < i*ncol(microSample))))
 # Y axis shows percent of subjects with less than X% of features containing missing data
 p1 <- ggplot() + geom_point(aes(x = seq(0,100,length.out = 100), y = 100*DataRepresentation / nrow(microSample))) +
+  geom_vline(xintercept = 100*params$missing.thrsh.r,linetype='dashed',color='grey70') + 
   xlab('max. % of features missing') + ylab('% of subjects') + theme_classic() + ggtitle('Data Representation') +
   theme(plot.title = element_text(size = 8,hjust=0.5),text=element_text(size=8))
 p1
 ggsave(p1,filename = paste(savedir,'DataRepresentationSubjects.pdf',sep=''),units= 'cm',height = 4.5,width=4.5)
-save(DataRepresentation, file=paste(savedir,'FigS1a_SourceData.RData',sep=''))
+save(DataRepresentation, file=paste(savedir,'FigS1d_SourceData.RData',sep=''))
 
 DataRepresentation <- sapply(seq(0,1,length.out = 100), function(i) 100*mean((colSums(is.na(microSample)) < i*nrow(microSample))))
 # Y axis shows percent of features with less than X% of subjects containing missing data
