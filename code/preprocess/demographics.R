@@ -45,10 +45,13 @@ p
 
 ggsave(p,filename = paste(savedir,'AgeAtDeathByDxJitter.pdf',sep=''),units= 'in',height = 6,width=6)
 
-# load(file = paste(params$resultsdir,'analyzecluster/subjLouvainPartitionReordered.RData',sep=''))
-# partition <- sapply(partition, function(i) paste('Cluster',i))
+load(file = paste(params$resultsdir,'analyzecluster/subjLouvainPartitionReordered.RData',sep=''))
+partition <- sapply(partition, function(i) paste('Cluster',i))
+
+source('code/misc/plottingfxns.R')
 # 
-# df <- data.frame(y=demo$AgeatDeath,x=partition)
-# p <- ggplot(df) + geom_boxplot(aes(x=x,y=y,color=x),alpha=0.5) + theme_classic() + xlab('') + ylab('Age at Death') +
-#   theme(axis.text.x = element_text(angle=90,vjust=0.5,hjust=1),legend.position = 'none') + scale_y_continuous(expand= c(0,0))
-# p
+# df <- data.frame(y=demo$AgeatDeath[-DisconnectedSubjects],x=partition)
+# p <- ggplot(df) + geom_boxplot(aes(x=x,y=y,fill=x),alpha=0.5) + theme_classic() + xlab('') + ylab('Age at Death') +
+#   theme(axis.text.x = element_text(angle=90,vjust=0.5,hjust=1,color=getClusterColors(k)),legend.position = 'none') + scale_y_continuous(expand= c(0,0)) +
+#   scale_fill_manual(values=getClusterColors(k))
+# ggsave(p,filename = paste(savedir,'AgeAtDeathByClusterJitter.pdf',sep=''),units= 'in',height = 6,width=6)
