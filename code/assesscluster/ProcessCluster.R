@@ -4,6 +4,7 @@ setwd(homedir)
 savedir <- paste(params$resultsdir,'analyzecluster/',sep='')
 dir.create(savedir,recursive=T)
 source('code/misc/fxns.R')
+source('code/misc/plottingfxns.R')
 
 microSample <- read.csv(paste(params$opdir,'processed/microSample.csv',sep=''),stringsAsFactors=F)[,-(1:2)] # Get rid of index column and INDDIDs
 patientSample <- read.csv(paste(params$opdir,'processed/patientSample.csv',sep=''),stringsAsFactors=F)[,-(1:2)] # Get rid of index column and INDDIDs
@@ -33,7 +34,6 @@ gamma.rng <- round(cl.data$gamma.rng*10) /10 # doubles got saved with 1e-16 erro
 partition <- partitions.by.gamma[,which(gamma.rng == gamma.opt)]
 
 DisconnectedSubjects <- cl.data$DisconnectedSubjects
-microSample <- remove.Disconnected.Subjects(microSample,DisconnectedSubjects)
 
 ############################
 ### Annex small clusters ###
@@ -44,9 +44,9 @@ thrsh <- 0.02 # if cluster is < 1% of sample, annex it to another cluster
 cluster.counts.by.gamma <- lapply(1:ncol(partitions.by.gamma), function(i)
   sapply(1:max(partitions.by.gamma[,i]), function(k.i) sum(partitions.by.gamma[,i]==k.i)))
 names(cluster.counts.by.gamma) <- as.character(gamma.rng)
-centroids <- compute.centroids(microSample,partition)
+centroids <- compute.centroids(microSample[-DisconnectedSubjects,],partition)
 
-partition <- annex.small.clusters(partition,X = microSample,centroids = centroids,thrsh = thrsh)
+partition <- annex.small.clusters(partition,X = microSample[-DisconnectedSubjects,],centroids = centroids,thrsh = thrsh)
 DisconnectedSubjects <- c(DisconnectedSubjects,which(is.na(partition)))
 partition <- partition[!is.na(partition)] # remove disconnected subjects
 #list[partition,DisconnectedSubjects] <- disconnect.small.clusters(partition)
@@ -63,7 +63,7 @@ centroids <- compute.centroids(microSample,partition)
 # regardless of the arbitrary ordering of louvain
 # only if 4 clusters
 
-cluster.init.reorder <- order.cluster.by.feature.old(microSample,centroids,c('CBTau','Thio','TDP43','Syn'))
+cluster.init.reorder <- order.cluster.by.feature.old(microSample,centroids,c('CB_Tau','Thio','TDP43','Syn'))
 # vs.
 #cluster.init.reorder <- order.cluster.by.feature(microSample,centroids)
 
