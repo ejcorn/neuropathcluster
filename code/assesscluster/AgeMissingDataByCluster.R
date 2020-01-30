@@ -1,13 +1,13 @@
 rm(list = setdiff(ls(), "params"))
 homedir <- params$homedir
 setwd(homedir)
-savedir <- paste(params$resultsdir,'analyzecluster/',sep='')
+savedir <- paste(params$resultsdir,'analyzecluster/patientcharacteristics/',sep='')
 dir.create(savedir,recursive=T)
 source('code/misc/fxns.R')
 source('code/misc/plottingfxns.R')
 
 microSample <- read.csv(paste(params$opdir,'processed/microSample.csv',sep=''),stringsAsFactors=F)[,-(1:2)] # Get rid of index column and INDDIDs
-patientSample <- read.csv(paste(params$opdir,'processed/patientSampleBraakCERAD.csv',sep=''))[,-(1:2)] # Get rid of index column and INDDIDs
+patientSample <- read.csv(paste(params$opdir,'processed/patientSampleABC.csv',sep=''))[,-(1:2)] # Get rid of index column and INDDIDs
 
 INDDIDs <- read.csv(paste(params$opdir,'processed/microSample.csv',sep=''),stringsAsFactors=F)[,2]
 
@@ -38,7 +38,11 @@ partition.names <- sapply(partition, function(i) paste('Cluster',i))
 names(partition.names) <- INDDIDs
 
 age.data <- list(AgeAtDeath=data.frame(INDDID=INDDIDs,y=age.death),
-                 AgeOnset=data.frame(INDDID=onset$INDDID,y=age.onset))
+                 AgeOnset=data.frame(INDDID=onset$INDDID,y=age.onset),
+                 # add disease duration
+                 AutopsyDate=data.frame(INDDID=INDDIDs,y=as.Date(patientSample$AutopsyDate)))
+date.breaks.p <- seq.Date(as.Date('1990/01/01'),as.Date('2020/01/01'),by = '5 years')
+
 for(age.lab in names(age.data)){
   df <- data.frame(INDDID=INDDIDs,g=partition.names,stringsAsFactors = F)
   clusterNames <- sort(unique(df$g))
@@ -46,27 +50,28 @@ for(age.lab in names(age.data)){
   df <- merge(df,age.data[[age.lab]],by='INDDID')
 
   p <- ggplot(data=df,aes(x=g,y=y,fill=g)) + geom_boxplot(outlier.size=0.5) + theme_classic()+
-    scale_y_continuous(breaks=seq(40,160,by = 10)) +
+    scale_y_continuous(breaks=seq(20,110,by = 20),limits=c(10,NA)) + ggtitle(age.lab)+ 
     scale_fill_manual(values=clusterColors,name='') + ylab('Age (y)') + xlab('') +  
     theme(legend.position = 'none',legend.key.size = unit(0.1,'in')) + #c(0.1,0.75)
-    theme(text= element_text(size=8),
+    theme(text= element_text(size=8),plot.title=element_text(size=8,hjust=0.5),
           axis.text.x = element_text(angle=90,vjust=0.5,hjust=1,color = clusterColors)) + 
-    stat_compare_means(size=2,comparisons = comps,position=5,method = "wilcox.test") 
-  p <- mult.comp.ggpubr(p)
+    stat_compare_means(size=1.75,comparisons = comps,position=5,method = "wilcox.test") 
+  if(is.Date(df$y)){p <- p + scale_y_date(breaks=date.breaks.p,labels=year(date.breaks.p))} # if autopsy date add special breaks for y axis
+  p <- mult.comp.ggpubr(p,method='fdr')
   pdf.options(reset = TRUE, onefile = FALSE)
-  pdf(file = paste(savedir,'/',age.lab,'ByClusterPairwiseWilcox.pdf',sep=''),height = unit(3,'in'),width=unit(3,'in'),useDingbats = F)
+  pdf(file = paste(savedir,'/',age.lab,'ByClusterPairwiseWilcox.pdf',sep=''),height = unit(6/2.54,'in'),width=unit(4.5/2.54,'in'),useDingbats = F)
   plot(ggplot_gtable(p)) #+ scale_y_continuous(limits=c(0,ymax))
   dev.off()
   
   p <- ggplot(df) + geom_violin(aes(x=g,y=y,fill=g)) + 
-    scale_y_continuous(breaks=seq(20,110,by = 10)) +
+    scale_y_continuous(breaks=seq(20,110,by = 20),limits=c(10,NA)) +
   	scale_fill_manual(breaks = clusterNames, 
   		limits = sapply(1:k, function(i) paste('Cluster',i)),
-  		values=clusterColors) + theme_classic() + xlab('') + ylab('Age') +
-  	theme(legend.position= 'none',text=element_text(size=8),axis.text.x=element_text(angle=90))
-  
+  		values=clusterColors) + theme_classic() + xlab('') + ylab('Age') + ggtitle(age.lab)+
+  	theme(legend.position= 'none',text=element_text(size=8),axis.text.x=element_text(angle=90),plot.title=element_text(size=8,hjust=0.5))
+  if(is.Date(df$y)){p <- p + scale_y_date(breaks=date.breaks.p,labels=year(date.breaks.p))} # if autopsy date add special breaks for y axis
   ggsave(filename = paste(savedir,age.lab,'ByCluster.pdf',sep=''),plot = p,
-         height = 3,width=3,units='in')
+         height = 5,width=4.5,units='cm')
 }
 ###############################
 ### Missing data by cluster ###
@@ -85,7 +90,7 @@ p <- ggplot(data=df,aes(x=g,y=y,fill=g)) + geom_boxplot(outlier.size=0.5) + them
   theme(text= element_text(size=8),
         axis.text.x = element_text(angle=90,vjust=0.5,hjust=1,color = clusterColors)) + 
   stat_compare_means(size=2,comparisons = comps,position=5,method = "wilcox.test") 
-p <- mult.comp.ggpubr(p)
+p <- mult.comp.ggpubr(p,method='none')
 pdf.options(reset = TRUE, onefile = FALSE)
 pdf(file = paste(savedir,'/MissingFeaturesByClusterPairwiseWilcox.pdf',sep=''),height = unit(3,'in'),width=unit(3,'in'),useDingbats = F)
 plot(ggplot_gtable(p)) #+ scale_y_continuous(limits=c(0,ymax))
@@ -137,23 +142,36 @@ p <- ggplot(data=df,aes(x=g,y=y,fill=g)) + geom_boxplot(outlier.size=0.5) + them
   theme(text= element_text(size=8),
         axis.text.x = element_text(angle=90,vjust=0.5,hjust=1,color = clusterColors)) + 
   stat_compare_means(size=2,comparisons = comps,position=5,method = "wilcox.test") 
-p <- mult.comp.ggpubr(p)
+p <- mult.comp.ggpubr(p,method='none') # don't multiple comparisons correct
 pdf.options(reset = TRUE, onefile = FALSE)
 pdf(file = paste(savedir,'/MissingFeaturesByClusterByTypePairwiseWilcox.pdf',sep=''),height = unit(9,'in'),width=unit(9,'in'),useDingbats = F)
 plot(ggplot_gtable(p)) #+ scale_y_continuous(limits=c(0,ymax))
 dev.off()
 
-p <- ggplot(data=df,aes(x=g,y=y,fill=g)) + geom_jitter(alpha=0.5,stroke=0) + theme_classic()+
-  facet_wrap(~x,scales='free') +
-  scale_y_continuous(breaks=seq(0,100,by = 10)) +
+p <- ggplot(data=df,aes(x=g,y=y,fill=g)) + geom_jitter(alpha=0.5,stroke=0,size=0.5) + theme_classic()+
+  facet_wrap(~x,scales='free',nrow=2) +
+  scale_y_continuous(breaks=seq(0,100,by = 20)) +
   scale_fill_manual(values=clusterColors,name='') + ylab('Missing Features (%)') + xlab('') +  
   theme(legend.position = 'none',legend.key.size = unit(0.1,'in')) + #c(0.1,0.75)
   theme(text= element_text(size=8),
         axis.text.x = element_text(angle=90,vjust=0.5,hjust=1,color = clusterColors)) + 
-  stat_compare_means(size=2,comparisons = comps,position=5,method = "wilcox.test") 
-p <- mult.comp.ggpubr(p)
+  stat_compare_means(size=1.5,comparisons = comps,position=5,method = "wilcox.test",label.y=seq(100,275,length.out=length(comps)))
+p <- mult.comp.ggpubr(p,method='none')
 pdf.options(reset = TRUE, onefile = FALSE)
-pdf(file = paste(savedir,'/MissingFeaturesByClusterByTypeJitterPairwiseWilcox.pdf',sep=''),height = unit(9,'in'),width=unit(9,'in'),useDingbats = F)
+pdf(file = paste(savedir,'/MissingFeaturesByClusterByTypeJitterPairwiseWilcox.pdf',sep=''),height = unit(10/2.54,'in'),width=unit(18/2.54,'in'),useDingbats = F)
 plot(ggplot_gtable(p)) #+ scale_y_continuous(limits=c(0,ymax))
 dev.off()
 
+# plot sex ratio by cluster
+sex <- as.character(demo$Sex)
+female.overall <- 100*mean(sex=='Female')
+female.by.cluster <- sapply(1:k, function(k.i) 100*mean(sex[partition==k.i]=='Female'))
+p <- ggplot() + geom_col(aes(x=clusterNames,y=female.by.cluster,fill=clusterNames))+
+  geom_hline(yintercept = female.overall,linetype='dashed',color='grey70')+
+  theme_classic() + scale_fill_manual(values=getClusterColors(k)) + 
+  scale_y_continuous(expand=c(0,0),limits=c(0,50),breaks=seq(0,50,by=10))+
+  theme(text= element_text(size=8),legend.position = 'none',
+        axis.text.x = element_text(angle=90,vjust=0.5,hjust=1,color = clusterColors)) +
+  ylab('% Female') + xlab('')
+ggsave(filename = paste0(savedir,'SexByCluster.pdf'),plot = p,
+       height = 6,width=4.5,units='cm')
