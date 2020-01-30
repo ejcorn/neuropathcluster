@@ -59,9 +59,6 @@ list[clusterColors,clusterNames] <-
 
 partitionSample <- flexdim.rowmask(partitionSample,Rem.Cl)
 
-ClusterProportion.byGenotype <- lapply(Genes.df, function(A) 
-  sapply(clusterNames, function(k.i) colSums(A[partitionSample == k.i,]) / colSums(A)))
-
 GenotypeProportion.byCluster <- list()
 p.names <- list('Blues','Reds')
 names(p.names) <- names(Genes.df)
@@ -86,5 +83,5 @@ for(g.i in names(Genes.df)){
   p
   
   ggsave(filename = paste(savedir,g.i,'GenotypeProportionsByClusterExclude',dz.exc,'FromC',paste0(exc.cl,collapse=','),'NDX',n.dx,'.pdf',sep=''),plot = p,
-         height = 5.5,width=7.5,units='cm')
+         height = 4.5,width=9,units='cm')
 }

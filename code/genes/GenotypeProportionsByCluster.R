@@ -41,9 +41,6 @@ load(file=paste(savedir,'AlleleTablesCluster.RData',sep=''))
 ### Plot Genotype proportions by cluster ###
 ############################################
 
-ClusterProportion.byGenotype <- lapply(Genes.df, function(A) 
-  sapply(clusterNames, function(k.i) colSums(A[partitionSample == k.i,]) / colSums(A)))
-
 GenotypeProportion.byCluster <- list()
 p.names <- list('Blues','Reds')
 names(p.names) <- names(Genes.df)
