@@ -175,3 +175,13 @@ p <- ggplot() + geom_col(aes(x=clusterNames,y=female.by.cluster,fill=clusterName
   ylab('% Female') + xlab('')
 ggsave(filename = paste0(savedir,'SexByCluster.pdf'),plot = p,
        height = 6,width=4.5,units='cm')
+
+# make table and save as latex code in .txt file
+female.by.cluster <- sapply(1:k, function(k.i) 100*mean(sex[partition==k.i]=='Female'))
+names(female.by.cluster) <- clusterNames
+female.by.cluster['Overall'] <- female.overall
+sex.table <- t(as.data.frame(female.by.cluster))
+rownames(sex.table) <- '% Female'
+lt <- xtable(x=sex.table,caption = 'Table 1. Sex by cluster and in overall sample.',label='table:sexbycluster')
+write.table(x=print(lt),file = paste0(savedir,'SexByClusterTable.txt'),row.names = F,col.names = F)
+
