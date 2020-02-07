@@ -1,9 +1,9 @@
 clearvars -except k BCT_path homedir opdir resultsdir; close all; clc
 
-% k = 4;
-% BCT_path = '~/Dropbox/Cornblath_Bassett_Projects/code/BCT';
-% homedir = '~/Dropbox/Neurodegeneration/PathCogClinDx/neuropathcluster/';
-% resultsdir = 'neuropathcluster_R0.75C1allpts_final/results_G1.7/';
+k = 6;
+BCT_path = '~/Dropbox/Cornblath_Bassett_Projects/code/BCT';
+homedir = '~/Dropbox/Neurodegeneration/PathCogClinDx/neuropathcluster/';
+resultsdir = 'neuropathcluster_R0.2C0_010320/results_G6/';
 
 %% Define constant variables
 
@@ -20,10 +20,11 @@ addpath(genpath([homedir,'code/matlab_functions'])) % add other ancillary matlab
 % inputs to plotting functions
 set(0,'DefaultFigureVisible','off'); % don't show me 70+ figs
 cmap = 'plasma'; % colormap
+%{
 min_col = [199 185 218] / 255; grey_n = [0.75 0.75 0.75];
-max_col = [45 45 129]/255;
+max_col = [45 45 129] / 255;
 cmap = bichrome_cmap(min_col,max_col);
-
+%}
 alpha = 1; % alpha of brains
 res = ['-r',num2str(600)];  % image resolution
 for k_i = 1:k
@@ -90,7 +91,7 @@ for k_i = 1:k
         
         % concatenate, crop again, title and save
         sub_cdata = [ant_sub_cdata,lat_sub_cdata];
-        crtx_cdata = [lat_crtx_cdata,med_crtx_cdata];
+        crtx_cdata = img_horzcat_whitepad(lat_crtx_cdata,med_crtx_cdata);
         concat_img = img_vertcat_whitepad(crtx_cdata,sub_cdata);                
         concat_img = crop_brain_image(concat_img,0.01);
         f=figure;
