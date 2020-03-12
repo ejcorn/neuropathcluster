@@ -87,7 +87,7 @@ missingMatrix <- is.na(microSample[,-1])
 patients$AutopsyDate <- as.Date(patients$AutopsyDate,format = '%m/%d/%Y')
 date.breaks.p <- seq.Date(as.Date('1990/01/01'),as.Date('2020/01/01'),by = '5 years')
 df.plot <- data.frame(x=patients$AutopsyDate[patients$INDDID %in% microSample$INDDID],y=rowSums(missingMatrix))
-p <- ggplot() + geom_vline(xintercept = as.Date('2007/01/01'),linetype='dashed',color='grey70')+
+p <- ggplot(df.plot) + geom_vline(xintercept = as.Date('2007/01/01'),linetype='dashed',color='grey70')+
   geom_point(aes(x=x,y=y),alpha=0.5,stroke=0,size=0.75) + 
   scale_x_date(breaks=date.breaks.p,labels = year(date.breaks.p))+
   xlab('Autopsy Date') + ylab('Missing Features') + theme_classic() +
@@ -146,7 +146,7 @@ p1 <- ggplot() + geom_point(aes(x = seq(0,100,length.out = 100), y = DataReprese
   theme(plot.title = element_text(size =8,hjust=0.5),text=element_text(size=8))
 p1
 ggsave(p1,filename = paste(savedir,'DataRepresentationFeatures.pdf',sep=''),units= 'cm',height = 4.5,width=4.5)
-save(DataRepresentation, file=paste(savedir,'FigS1b_SourceData.RData',sep=''))
+
 
 ###################################################
 ### Exclude subjects with a lot of missing data ###
@@ -280,20 +280,25 @@ patients$ADStatus[patients$ABeta == '' & patients$Braak03 >= 2 & patients$CERAD 
 patients$ADStatus[patients$ABeta == '' & patients$Braak03 == 3 & patients$CERAD == 3] <-'High'
 
 # process DLB stages
-patients$DLBType[patients$DLBType == 'Diffuse or Neocortical'] <- 'Neocortical'
-patients$DLBType[patients$DLBType == 'Brainstem Predominant'] <- 'Brainstem'
-patients$DLBType[patients$DLBType == 'Transitional or Limbic'] <- 'Limbic'
-patients$DLBType[patients$DLBType == 'Amygdala Predominant'] <- 'Amygdala'
-patients$DLBType[is.na(patients$DLBType)] <- '?'
-patients$DLBType[patients$DLBType == ''] <- '?'
-patients$DLBType[patients$DLBType == 'N/A'] <- '?'
+DLB.stage.key <- cbind(c('Diffuse or Neocortical','Brainstem Predominant','Transitional or Limbic','Amygdala Predominant'),
+      c('Neocortical','Brainstem','Limbic','Amygdala'))
+for(i.key in 1:nrow(DLB.stage.key)){patients$DLBType[patients$DLBType == DLB.stage.key[i.key,1]] <- DLB.stage.key[i.key,2]} # shorten names of LBD types
+missingDLB.mask <- (is.na(patients$DLBType) | patients$DLBType == '' | patients$DLBType == 'N/A') & grepl.npdx(patients,'LBD',5) # patients with LBD and either na, '', or 'N/A' for stage
+INDDIDs.missingDLB <- patients$INDDID[missingDLB.mask]
 
-# x<- grepl.npdx(patients,'LBD',5)
-# patients$DLBType[x]
-# MissingDLBType <- patients[x & !patients$DLBType %in% c('Neocortical','Brainstem','Amygdala','Limbic'),]
-# write.csv(x=MissingDLBType,row.names = F,file = paste0(savedir,'MissingDLBType_EJC012420.csv'))
-# JR.LBD <- read.csv('data/LBD cases 1-23-2020.csv',stringsAsFactors = F)
-# sum(JR.LBD$INDDID %in% MissingDLBType$INDDID)
+# load in newer version of patients csv that has the LBD staging for every case, but has other updates that came too late for this paper
+patients.new <- read.csv(file = paste0("data/INDD_Patients031020.csv"),stringsAsFactors = FALSE)
+rownames(patients.new) <- as.character(patients.new$INDDID) # index patients by INDDID so no mixups occur
+#patients.new[as.character(INDDIDs.missingDLB),c('INDDID',paste0('NPDx',1:3),'DLBType')] # display patients in new file with missing DLB type in old file
+rownames(patients) <- as.character(patients$INDDID) # index patients by INDDID so no mixups occur
+#patients[as.character(INDDIDs.missingDLB),c('INDDID',paste0('NPDx',1:3),'DLBType')] # display patients with missing DLB type in old file
+patients[as.character(INDDIDs.missingDLB),'DLBType'] <- patients.new[as.character(INDDIDs.missingDLB),'DLBType'] # replace old DLB type data with new data
+patients[as.character(INDDIDs.missingDLB),c('INDDID',paste0('NPDx',1:3),'DLBType')]
+
+# now make a new category called NOS for 6 cases with DLBType still missing
+missingDLB.mask <- (is.na(patients$DLBType) | patients$DLBType == '' | patients$DLBType == 'N/A') & grepl.npdx(patients,'LBD',5) # patients with LBD and either na, '', or 'N/A' for stage
+for(i.key in 1:nrow(DLB.stage.key)){patients$DLBType[patients$DLBType == DLB.stage.key[i.key,1]] <- DLB.stage.key[i.key,2]}  # shorten names of LBD types
+patients[missingDLB.mask,'DLBType'] <- 'NOS'
 
 write.csv(x = patients,file = paste(savedir,"patientSample.csv",sep=''))
 

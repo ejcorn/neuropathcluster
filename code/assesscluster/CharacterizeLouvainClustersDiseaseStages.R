@@ -117,8 +117,8 @@ dz.order <- as.character(unique(df.plt2e$Dz)) # use disease labels from fig 2e
 dz.colors <- dz.colors[-which(grepl('ADNC',dz.order))]
 dz.order <- dz.order[-which(grepl('ADNC',dz.order))]
 # insert amygdala LBD
-dz.colors <- c(dz.colors[1:which(grepl('LBD - \\?',dz.order))],lighten(col = LBD.Color,amount = 0.3,method='relative'),dz.colors[(which(grepl('LBD - \\?',dz.order))+1):length(dz.colors)])
-dz.order <- c(dz.order[1:which(grepl('LBD - \\?',dz.order))],'LBD - Amygdala',dz.order[(which(grepl('LBD - \\?',dz.order))+1):length(dz.order)])
+dz.colors <- c(dz.colors[1:which(grepl('LBD - NOS',dz.order))],lighten(col = LBD.Color,amount = 0.3,method='relative'),dz.colors[(which(grepl('LBD - NOS',dz.order))+1):length(dz.colors)])
+dz.order <- c(dz.order[1:which(grepl('LBD - NOS',dz.order))],'LBD - Amygdala',dz.order[(which(grepl('LBD - NOS',dz.order))+1):length(dz.order)])
 dz.order <- c(dz.order,'None') # add none as last entry
 dz.colors <- c(dz.colors,'grey80') # add blank color
 p.k.dz2 <- p.k.dz2 + scale_fill_manual(limits=dz.order, values = dz.colors,name='Secondary\nHistopathologic Diagnosis')

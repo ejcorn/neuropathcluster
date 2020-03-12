@@ -153,7 +153,7 @@ other.dz <- function(patientSample,NPDx = 'NPDx1'){
   long.short.list[['LBD - Brainstem']] <- 'bLBD'
   long.short.list[['LBD - Neocortical']] <- 'nLBD'
   long.short.list[['LBD - Limbic']] <- 'lLBD'
-  long.short.list[['LBD - ?']] <- 'LBD'
+  long.short.list[['LBD - NOS']] <- 'LBD'
   long.short.list[['Multiple System Atrophy']] <- 'MSA'
   long.short.list[['Other']] <- 'Oth'
   #long.short.list[['Parkinson\'s disease']] <- 'PD'
