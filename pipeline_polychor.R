@@ -35,12 +35,12 @@ source('code/misc/directories.R')
 
 # go from raw INDD csvs to base data for analysis
 source('code/preprocess/GenerateSample_v3.R')
-source('code/preprocess/demographics.R') # analyze demographics (age)
 
 ########################
 ### Cluster Patients ###
 ########################
 
+source('code/kmeans/Imputation.R')
 source('code/clustering/PrepDataCluster.R') # compute polychoric correlation matrix... time consuming
 source('code/kmeans/pam.R')
 
@@ -52,19 +52,22 @@ if(params$gamma.opt < 2){
   source('code/assesscluster/ProcessCluster.R') # make sure clusters are in same order every time
 }
 
+source('code/kmeans/PAMBootstrapReliabilityScrambleNorm.R')
+source('code/kmeans/Plot_PAMBootstrapReliabilityScrambleNorm.R')
+
 ######################################################################
 ### Perform expl. factor analysis on polychoric correlation matrix ###
 ######################################################################
 
 source('code/kmeans/Decomposition.R')
-
+source('code/kmeans/AnalyzeEFA.R')
 source('code/kmeans/umap_cluster.R')
 
 #########################
 ### Assess clustering ###
 #########################
 
-source('code/assesscluster/CharacterizeLouvainClusters.R')
+source('code/assesscluster/CharacterizeLouvainClustersDiseaseStages.R')
 source('code/assesscluster/ClinicalDxByCluster.R')
 source('code/assesscluster/SubjectCorrMatLouvain.R')
 source('code/assesscluster/AgeMissingDataByCluster.R')
@@ -73,43 +76,48 @@ source('code/assesscluster/SimilarityByClusterVsDisease.R')
 source('code/assesscluster/ClusterPathologyDistribution.R')
 source('code/assesscluster/ClustersPathSpace.R')
 
+#######################################
+### Make surface plots of centroids ###
+#######################################
+
+source('code/plot_brains/prep_centroid_plots.R')
+source('code/plot_brains/runPlotBrainsMATLAB_R.R')
+
 ########################################
 ### Cognition, Genes, CSF by cluster ###
 ########################################
 
 source('code/cogcsf/CogByCluster.R')
 source('code/genes/ProcessAlleles.R')
-source('code/genes/AlleleProportionsByCluster.R')
+source('code/genes/GenotypeProportionsByCluster.R')
 source('code/genes/AllelesByCluster.R')
 source('code/cogcsf/CSFByCluster.R')
-source('code/cogcsf/CSFByClusterOutliers.R') # ensure CSF analysis is robust to outliers
-
+source('code/cogcsf/CSFVsOnset.R')
 ################################
 ### Exclude/isolate diseases ###
 ################################
 
 dz.exc <- 'Alzheimer\'s disease'
-exc.cl <- 2
-n.dx <- 4
+exc.cl <- c(2,4,5)
+n.dx <- 5
 source('code/cogcsf/CogByClusterExcludeDisease.R')
 source('code/cogcsf/CSFByClusterExcludeDisease.R')
-source('code/cogcsf/CSFByClusterOutliersExcludeDisease.R') # ensure CSF analysis is robust to outliers
-source('code/genes/AlleleProportionsByClusterExcludeDisease.R')
+source('code/genes/GenotypeProportionsByClusterExcludeDisease.R')
 source('code/genes/AllelesByClusterExcludeDisease.R')
 
 dz.exc <- 'Alzheimer\'s disease'
-exc.cl <- 5
-n.dx <- 4
+exc.cl <- 2
+n.dx <- 5
 source('code/genes/AlleleProportionsByClusterExcludeDisease.R')
 source('code/genes/AllelesByClusterExcludeDisease.R')
 
 dz.exc <- 'PSP'
 exc.cl <- 1
-n.dx <- 4
+n.dx <- 5
 source('code/genes/AllelesByClusterExcludeDisease.R')
 
 dz.iso <- 'Alzheimer\'s disease'
-n.dx <- 4
+n.dx <- 5
 source('code/cogcsf/CogByClusterIsolateDisease.R')
 source('code/cogcsf/CSFByClusterIsolateDisease.R')
 source('code/genes/AllelesByClusterIsolateDisease.R')
@@ -124,7 +132,7 @@ source('code/genes/AllelesByClusterIsolateDisease.R')
 ##############################
 
 # GLM -- comparing to overlapping traditional diagnoses
-extralabs <- c('CSFOnlyAddNormalMMSE')
+extralabs <- c('CSFOnlyAddNormalMMSE')# c('GeneOnlyAddNormalMMSE','CSFGeneAddNormalMMSE','CSFOnlyAddNormalMMSE')
 for(extralab in extralabs){
   source('code/predictdisease/pd_prepdata_alldx.R') # construct data frame allowing for overlap in traditional dx
   source('code/predictdisease/pd_traintestglm.R')
@@ -133,7 +141,7 @@ for(extralab in extralabs){
 }
 
 # random forest
-extralabs <- c('CSFOnlyAddNormalMMSE')#,'CSFOnly','GeneOnly')
+extralabs <- c('GeneOnlyAddNormalMMSE')#,'CSFOnly','GeneOnly')
 for(extralab in extralabs){
   source('code/predictdisease/pd_prepdata_alldx.R')
   source('code/predictdisease/pd_traintestrf.R')
@@ -148,10 +156,10 @@ source('code/predictdisease/CSFspace.R')
 ### Predict disease labels exclude disease ###
 ##############################################
 
-extralab <- c('CSFOnly')
+extralab <- c('CSFGeneAddNormalMMSE')
 dz.exc <- 'Alzheimer\'s disease'
-exc.cl <- 2
-n.dx <- 4
+exc.cl <- c(2,4,5)
+n.dx <- 5
 source('code/predictdisease/pd_traintestExcludeDisease.R')
 extralab <- paste(extralab,'Exclude',dz.exc,sep='')
 source('code/predictdisease/pd_plotperfExcludeDisease.R')
