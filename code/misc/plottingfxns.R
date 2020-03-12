@@ -25,6 +25,7 @@ p.signif <- function(p){
   # ***: p <= 0.001
   # ****: p <= 0.000001
   p.new <- rep('',length(p))
+  p.new[is.na(p)] <- ''
   p.new[p > 0.05] <- 'ns'
   p.new[p < 0.05 & p > 0.01] <- '*'
   p.new[p <= 0.01 & p > 0.001] <- '**'
