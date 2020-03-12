@@ -67,3 +67,15 @@ for(g.i in names(Genes.df)){
   ggsave(filename = paste(savedir,g.i,'GenotypeProportionsByCluster.pdf',sep=''),plot = p,
          height = 5.5,width=7.5,units='cm')
 }
+
+# bootstrap genotype proportions
+# g.i <- 'MAPTHaplotype'
+# 
+# bootfun <- function(X){
+#   nperms <- 10000
+#   return(sapply(1:nperms,function(n) count.ejc(X[sample(1:length(X),replace=T)],items=unique(X))/length(X)))
+# }
+# boot.res <- lapply(clusterNames, function(k.i) 
+#   t(bootfun(Genes.df[partitionSample == k.i,g.i])))
+# lapply(boot.res,function(X) sapply(1:ncol(X), function(j) quantile(X[,j],c(0.025,0.975))))
+

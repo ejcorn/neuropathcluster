@@ -181,7 +181,16 @@ female.by.cluster <- sapply(1:k, function(k.i) 100*mean(sex[partition==k.i]=='Fe
 names(female.by.cluster) <- clusterNames
 female.by.cluster['Overall'] <- female.overall
 sex.table <- t(as.data.frame(female.by.cluster))
-rownames(sex.table) <- '% Female'
-lt <- xtable(x=sex.table,caption = 'Table 1. Sex by cluster and in overall sample.',label='table:sexbycluster')
-write.table(x=print(lt),file = paste0(savedir,'SexByClusterTable.txt'),row.names = F,col.names = F)
+rownames(sex.table) <- 'Female (%)'
 
+# analyze race
+race <- as.character(demo$Race)
+race[race == ''] <- 'Unknown or Not Reported'
+race.overall <- sapply(unique(race), function(r) 100*mean(race==r))
+race.by.cluster <- sapply(1:k, function(k.i) sapply(unique(race), function(r) 100*mean(race[partition==k.i]==r)))
+race.table <- cbind(race.by.cluster,race.overall)
+colnames(race.table) <- c(clusterNames,'Overall')
+rownames(race.table) <- paste(unique(race),'(%)')
+
+lt <- xtable(x=signif(rbind(sex.table,race.table),3),caption = 'Table 1. Sex and race by cluster and in overall sample.',label='table:sexbycluster')
+write.table(x=print(lt),file = paste0(savedir,'SexAndRaceByClusterTable.txt'),row.names = F,col.names = F)
