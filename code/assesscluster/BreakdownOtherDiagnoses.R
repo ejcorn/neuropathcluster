@@ -1,4 +1,4 @@
-# same as CharacterizeLouvainClusters.R but stratifies AD and LBD by disease stages
+#demographic data
 
 rm(list = setdiff(ls(), "params"))
 homedir <- params$homedir
@@ -77,4 +77,6 @@ p.all <- plot_grid(plotlist = p.list,nrow=1,rel_widths = c(2,2,1))
 ggsave(filename = paste(savedir,'PatientDiagnosesOtherTauOther.pdf',sep=''),plot = p.all,
        height = 6,width=18,units='cm')
 
-FigSXac <- lapply(p.list,function(X) X$data) # get source data
+FigS2ac <- lapply(p.list,function(X) X$data) # get source data
+save(FigS2ac, file=paste(params$sourcedata.dir,'FigS2a-c_SourceData.RData',sep=''))
+

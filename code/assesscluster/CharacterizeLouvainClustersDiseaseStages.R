@@ -58,7 +58,7 @@ p2 <- ggplot(data = melted_cormat, aes(x=Var1, y=Var2, fill=value)) +
 p2
 ggsave(plot = p2,filename = paste(savedir,"LouvainClusterCentroids.pdf",sep=''),width = 1.5, height = 2, units = "in")
 
-save(centroids,file = paste(savedir,'Fig2d_SourceData.RData',sep=''))
+save(centroids,file = paste(params$sourcedata.dir,'Fig2d_SourceData.RData',sep=''))
 
 ############################
 ### Cluster by diagnoses ###
@@ -93,7 +93,7 @@ list[patientSample,dz.short]<- other.dz(patientSample)
 list[p.k.dz,df.plt2e] <- plot.dz.by.cluster(patientSample$NPDx1,partition,dz.short,clusterColors,'Primary\nHistopathologic Diagnosis',dz.colors)
 ggsave(filename = paste(savedir,'ClustersByPrimaryDiseaseStages.pdf',sep=''),plot = p.k.dz,
        height = 2,width=3,units='in')
-#save(df.plt2e,file = paste(savedir,'Fig2e_SourceData.RData',sep=''))
+save(df.plt2e,file = paste(params$sourcedata.dir,'Fig2e_SourceData.RData',sep=''))
 
 # now isolate patients with high or intermediate ADNC and plot by secondary diagnoses
 #AD.mask <- patientSample$ADStatus %in% c('High','Intermediate') 
@@ -123,7 +123,7 @@ dz.order <- c(dz.order,'None') # add none as last entry
 dz.colors <- c(dz.colors,'grey80') # add blank color
 p.k.dz2 <- p.k.dz2 + scale_fill_manual(limits=dz.order, values = dz.colors,name='Secondary\nHistopathologic Diagnosis')
 
-save(df.plt2f,file = paste(savedir,'Fig2f_SourceData.RData',sep=''))
+save(df.plt2f,file = paste(params$sourcedata.dir,'Fig2f_SourceData.RData',sep=''))
 p.all <- plot_grid(plotlist = list(p2,p.k.dz,p.k.dz2),align = 'hv',nrow=1,axis = 'b',rel_widths = c(1,2,2))
 ggsave(filename = paste(savedir,'ClusterCentroidsDiseaseStageNPDx1ADNPDx2.pdf',sep=''),plot = p.all,
        height = 5,width=18,units='cm')

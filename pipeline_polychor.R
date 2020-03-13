@@ -29,12 +29,15 @@ source('code/misc/packages.R')
 
 source('code/misc/directories.R')
 
+# ~~~~~~~~~~ Run code to this point ~~~~~~~~~~~ #
+# ~~~~~ then run any script independently ~~~~~ #
+
 #######################
 ### Preprocess data ###
 #######################
 
 # go from raw INDD csvs to base data for analysis
-source('code/preprocess/GenerateSample_v3.R')
+source('code/preprocess/GenerateSample_v3.R') # Fig S1a-d
 
 ########################
 ### Cluster Patients ###
@@ -52,47 +55,49 @@ if(params$gamma.opt < 2){
   source('code/assesscluster/ProcessCluster.R') # make sure clusters are in same order every time
 }
 
-source('code/kmeans/PAMBootstrapReliabilityScrambleNorm.R')
-source('code/kmeans/Plot_PAMBootstrapReliabilityScrambleNorm.R')
+source('code/kmeans/PAMBootstrapReliabilityScrambleNorm.R') # bootstrap clustering
+source('code/kmeans/PartitionSimilarity_PAMBootstrapReliabilityScrambleNorm.R') # compute similarity between bootstrapped partitions
+source('code/kmeans/Plot_PAMBootstrapReliabilityScrambleNorm.R') # Figure S6a-h -- these three scripts are serially dependent
 
 ######################################################################
 ### Perform expl. factor analysis on polychoric correlation matrix ###
 ######################################################################
 
 source('code/kmeans/Decomposition.R')
-source('code/kmeans/AnalyzeEFA.R')
+source('code/kmeans/AnalyzeEFA.R') # Fig S9
 source('code/kmeans/umap_cluster.R')
 
 #########################
 ### Assess clustering ###
 #########################
 
-source('code/assesscluster/CharacterizeLouvainClustersDiseaseStages.R')
+source('code/assesscluster/CharacterizeLouvainClustersDiseaseStages.R') # Fig 2d-f
+source('code/assesscluster/BreakdownOtherDiagnoses.R') # Fig S2
 source('code/assesscluster/ClinicalDxByCluster.R')
-source('code/assesscluster/SubjectCorrMatLouvain.R')
-source('code/assesscluster/AgeMissingDataByCluster.R')
-source('code/assesscluster/ADLBDClusterivsClusterj.R')
-source('code/assesscluster/SimilarityByClusterVsDisease.R')
-source('code/assesscluster/ClusterPathologyDistribution.R')
+source('code/assesscluster/SubjectCorrMatLouvain.R') # Fig 2a-c
+source('code/assesscluster/AgeMissingDataByCluster.R') # Fig S3a-g, Fig S5a-c
+source('code/assesscluster/ADLBDClusterivsClusterj.R') # Fig 3a-f
 source('code/assesscluster/ClustersPathSpace.R')
+source('code/assesscluster/PathMatrixClustered.R') # Fig S8a
 
 #######################################
 ### Make surface plots of centroids ###
 #######################################
 
-source('code/plot_brains/prep_centroid_plots.R')
-source('code/plot_brains/runPlotBrainsMATLAB_R.R')
+source('code/plot_brains/prep_centroid_plots.R') # prep data for runPlotBrainsMATLAB_R.R
+source('code/plot_brains/runPlotBrainsMATLAB_R.R') # Fig S7a
 
 ########################################
 ### Cognition, Genes, CSF by cluster ###
 ########################################
 
-source('code/cogcsf/CogByCluster.R')
-source('code/genes/ProcessAlleles.R')
-source('code/genes/GenotypeProportionsByCluster.R')
-source('code/genes/AllelesByCluster.R')
-source('code/cogcsf/CSFByCluster.R')
-source('code/cogcsf/CSFVsOnset.R')
+source('code/cogcsf/CogByCluster.R') # Fig 4a, Fig S4a
+source('code/genes/ProcessAlleles.R') # process for next 2 scripts
+source('code/genes/GenotypeProportionsByCluster.R') # Fig 5a-b
+source('code/genes/AllelesByCluster.R')  # Fig 5c-g
+source('code/cogcsf/CSFByCluster.R') # Fig 4b
+source('code/cogcsf/CSFVsOnset.R') # Fig S4b
+
 ################################
 ### Exclude/isolate diseases ###
 ################################
@@ -100,39 +105,27 @@ source('code/cogcsf/CSFVsOnset.R')
 dz.exc <- 'Alzheimer\'s disease'
 exc.cl <- c(2,4,5)
 n.dx <- 5
-source('code/cogcsf/CogByClusterExcludeDisease.R')
-source('code/cogcsf/CSFByClusterExcludeDisease.R')
-source('code/genes/GenotypeProportionsByClusterExcludeDisease.R')
-source('code/genes/AllelesByClusterExcludeDisease.R')
-
-dz.exc <- 'Alzheimer\'s disease'
-exc.cl <- 2
-n.dx <- 5
-source('code/genes/AlleleProportionsByClusterExcludeDisease.R')
-source('code/genes/AllelesByClusterExcludeDisease.R')
+source('code/cogcsf/CogByClusterExcludeDisease.R') # Fig S10a
+source('code/cogcsf/CSFByClusterExcludeDisease.R') # Fig S11a
+source('code/genes/GenotypeProportionsByClusterExcludeDisease.R') # Fig S12a-b
+source('code/genes/AllelesByClusterExcludeDisease.R') # Fig S12c-e
 
 dz.exc <- 'PSP'
 exc.cl <- 1
 n.dx <- 5
-source('code/genes/AllelesByClusterExcludeDisease.R')
+source('code/genes/AllelesByClusterExcludeDisease.R') # Fig S13a-b
 
 dz.iso <- 'Alzheimer\'s disease'
 n.dx <- 5
-source('code/cogcsf/CogByClusterIsolateDisease.R')
-source('code/cogcsf/CSFByClusterIsolateDisease.R')
-source('code/genes/AllelesByClusterIsolateDisease.R')
-
-# dz.excs <- c('Alzheimer\'s disease','PSP','Parkinson\'s disease')
-# exc.cls <- c(2,1,4); names(exc.cls) <- dz.excs
-# n.dx <- 4
-# for(dz.exc in dz.excs){source('code/genes/AllelesByClusterExcludeDisease.R')}
+source('code/cogcsf/CogByClusterIsolateDisease.R') # Fig S10b
+source('code/cogcsf/CSFByClusterIsolateDisease.R') # Fig S11b
 
 ##############################
 ### Predict disease labels ###
 ##############################
 
 # GLM -- comparing to overlapping traditional diagnoses
-extralabs <- c('CSFOnlyAddNormalMMSE')# c('GeneOnlyAddNormalMMSE','CSFGeneAddNormalMMSE','CSFOnlyAddNormalMMSE')
+extralabs <- c('CSFOnlyAddNormalMMSE','CSFGeneAddNormalMMSE','GeneOnlyAddNormalMMSE') # Fig 6, Fig S14, Fig S16
 for(extralab in extralabs){
   source('code/predictdisease/pd_prepdata_alldx.R') # construct data frame allowing for overlap in traditional dx
   source('code/predictdisease/pd_traintestglm.R')
@@ -141,7 +134,7 @@ for(extralab in extralabs){
 }
 
 # random forest
-extralabs <- c('GeneOnlyAddNormalMMSE')#,'CSFOnly','GeneOnly')
+extralabs <- c('CSFGeneAddNormalMMSE') # Fig S15
 for(extralab in extralabs){
   source('code/predictdisease/pd_prepdata_alldx.R')
   source('code/predictdisease/pd_traintestrf.R')
@@ -156,10 +149,12 @@ source('code/predictdisease/CSFspace.R')
 ### Predict disease labels exclude disease ###
 ##############################################
 
-extralab <- c('CSFGeneAddNormalMMSE')
+extralabs <- c('CSFOnlyAddNormalMMSE','CSFGeneAddNormalMMSE') # Fig S17a-b, Fig S17c-d
 dz.exc <- 'Alzheimer\'s disease'
 exc.cl <- c(2,4,5)
 n.dx <- 5
-source('code/predictdisease/pd_traintestExcludeDisease.R')
-extralab <- paste(extralab,'Exclude',dz.exc,sep='')
-source('code/predictdisease/pd_plotperfExcludeDisease.R')
+for(extralab in extralabs){
+  source('code/predictdisease/pd_traintestExcludeDisease.R')
+  extralab <- paste(extralab,'Exclude',dz.exc,sep='')
+  source('code/predictdisease/pd_plotperfExcludeDisease.R')
+}

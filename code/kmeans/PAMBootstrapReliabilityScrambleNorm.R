@@ -30,9 +30,9 @@ if(params$dist.met == 'spearman'){
   W <- subject.cormat$rho
 }
 
-##########################################################
-### see if you get same centroids in bootstrap samples ###
-##########################################################
+################################################################
+### test robustness of cluster solution in bootstrap samples ###
+################################################################
 
 # Take bootstrap samples. Cluster at range of k and thresholds.
 # 1.	Plot distribution of silhouette values as a function of k and threshold. 

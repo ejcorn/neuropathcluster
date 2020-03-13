@@ -6,3 +6,7 @@ dir.create(params$opdir,recursive = T)
 # resultsdir contains results of analyses for a particular choice of gamma
 params$resultsdir <- paste(params$opdir,'results_G',params$gamma.opt,'/',sep='')
 dir.create(params$resultsdir,recursive = T)
+
+# sourcedata.dir contains numerical data underlying all figures and tables
+params$sourcedata.dir <- paste0(params$opdir,'SourceData/')
+dir.create(params$sourcedata.dir,recursive = T)

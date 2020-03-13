@@ -93,7 +93,7 @@ p <- ggplot(df.plot) + geom_vline(xintercept = as.Date('2007/01/01'),linetype='d
   xlab('Autopsy Date') + ylab('Missing Features') + theme_classic() +
   theme(text=element_text(size=8),axis.text.x = element_text(angle=90,hjust=1,vjust=0.5))
 ggsave(p,filename = paste0(savedir,'MissingDataByAutopsyDate.pdf'),units= 'cm',height = 4.5,width=4.5)
-save(df.plot, file=paste(savedir,'FigS1a_SourceData.RData',sep=''))
+save(df.plot, file=paste(params$sourcedata.dir,'FigS1a_SourceData.RData',sep=''))
 
 # remove pre 2007 cases
 date.thresh <- as.Date('01/01/2007',format='%m/%d/%Y') 
@@ -106,7 +106,7 @@ clim <- c(0,max(100*missingMatrix.reshape,na.rm=T))
 p <- imagesc(100*missingMatrix.reshape,cmap='Blues',clim = clim) + ggtitle('Missing Data (% Subjects)')+
   theme(text=element_text(size=6),axis.text.x = element_text(angle=90,hjust=1,vjust=0.5),plot.title = element_text(hjust=0.5,size=6)) + nice_cbar() 
 ggsave(p,filename = paste0(savedir,'MissingDataRegionTypeAll.pdf'),units= 'cm',height = 4.5,width=5.3)
-save(missingMatrix.reshape, file=paste(savedir,'FigS1b_SourceData.RData',sep=''))
+save(missingMatrix.reshape, file=paste(params$sourcedata.dir,'FigS1b_SourceData.RData',sep=''))
 
 # Look at the above plot. You will see that data is ubiquitously missing from a set of
 # regions and types of features moreso than other features. They are:
@@ -121,7 +121,7 @@ clim <- c(0,max(100*missingMatrix.reshape,na.rm=T))
 p<-imagesc(100*missingMatrix.reshape,cmap='Blues',clim=clim) + ggtitle('Missing Data (% Subjects)')+
   theme(text=element_text(size=6),axis.text.x = element_text(angle=90,hjust=1,vjust=0.5),plot.title = element_text(hjust=0.5,size=6)) + nice_cbar() 
 ggsave(p,filename = paste0(savedir,'MissingDataRegionTypeExcluded.pdf'),units= 'cm',height = 4.5,width=5.3)
-save(missingMatrix.reshape, file=paste(savedir,'FigS1c_SourceData.RData',sep=''))
+save(missingMatrix.reshape, file=paste(params$sourcedata.dir,'FigS1c_SourceData.RData',sep=''))
 
 microSample <- microSample[,c(TRUE,retainedFeatureMask)] # add TRUE to keep INDDID column
 
@@ -137,7 +137,7 @@ p1 <- ggplot() + geom_point(aes(x = seq(0,100,length.out = 100), y = 100*DataRep
   theme(plot.title = element_text(size = 8,hjust=0.5),text=element_text(size=8))
 p1
 ggsave(p1,filename = paste(savedir,'DataRepresentationSubjects.pdf',sep=''),units= 'cm',height = 4.5,width=4.5)
-save(DataRepresentation, file=paste(savedir,'FigS1d_SourceData.RData',sep=''))
+save(DataRepresentation, file=paste(params$sourcedata.dir,'FigS1d_SourceData.RData',sep=''))
 
 DataRepresentation <- sapply(seq(0,1,length.out = 100), function(i) 100*mean((colSums(is.na(microSample)) < i*nrow(microSample))))
 # Y axis shows percent of features with less than X% of subjects containing missing data

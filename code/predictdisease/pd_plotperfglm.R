@@ -64,19 +64,19 @@ p.all <- plot_grid(plotlist= list(p.d,p.c), align = 'hv',nrow = 2,axis='b',
 		rel_heights = rel_heights)
 
 w.multiplier <- 1; h.multiplier <- 1
-if(grepl('CSFGene',extralab) | grep('GeneOnly',extralab)){w.multiplier <- 1.22; h.multiplier <- 0.75}
+if(grepl('CSFGene',extralab) | grepl('GeneOnly',extralab)){w.multiplier <- 1.22; h.multiplier <- 0.75}
 ggsave(filename = paste(savedir,'GLMPerformanceClustersDisease',extralab,'.pdf',sep=''),plot = p.all,
        height = 14*h.multiplier,width=19*w.multiplier,units='cm')
 
-if(grepl('CSFOnly',extralab)){
-  FigS5ad <- lapply(c(p.d.list,p.c.list),function(X) X$data)
-  save(FigS5ad,file = paste(savedir,'Fig5a-d_',extralab,'SourceData.RData',sep=''))
+if(extralab == 'CSFOnlyAddNormalMMSE'){
+  Fig6ad <- lapply(c(p.d.list,p.c.list),function(X) X$data)
+  save(Fig6ad,file = paste(params$sourcedata.dir,'Fig6a-d_',extralab,'SourceData.RData',sep=''))
 }
-if(grepl('CSFGene',extralab)){
-  FigS7ad <- lapply(c(p.d.list,p.c.list),function(X) X$data)
-	save(FigS7ad,file = paste(savedir,'FigS7a-d_',extralab,'SourceData.RData',sep=''))
+if(extralab == 'CSFGeneAddNormalMMSE'){
+  FigS14ad <- lapply(c(p.d.list,p.c.list),function(X) X$data)
+	save(FigS14ad,file = paste(params$sourcedata.dir,'FigS14a-d_',extralab,'SourceData.RData',sep=''))
 }
-if(grepl('GeneOnly',extralab)){
-	FigS10ad <- lapply(c(p.d.list,p.c.list),function(X) X$data)
-  save(FigS10ad,file = paste(savedir,'FigS10ad_',extralab,'SourceData.RData',sep=''))
+if(extralab == 'GeneOnlyAddNormalMMSE'){
+	FigS16ad <- lapply(c(p.d.list,p.c.list),function(X) X$data)
+  save(FigS16ad,file = paste(params$sourcedata.dir,'FigS16ad_',extralab,'SourceData.RData',sep=''))
 }

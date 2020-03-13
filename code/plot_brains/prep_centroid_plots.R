@@ -53,3 +53,4 @@ for(C in rownames(centroids)){
 		writeMat(con=paste(savedir,C,'_',p.type,'.mat',sep=''),C.region.plot.t=C.region.plot.t)
 	}
 }
+system(paste0('tar -zcf ',params$sourcedata.dir,'FigS7a_SourceData_SurfacePlots.tar.gz ',savedir))

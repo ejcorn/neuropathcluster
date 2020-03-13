@@ -72,6 +72,7 @@ pdf.options(reset = TRUE, onefile = FALSE)
 pdf(file = file.path(savedir,'LastMoCAvsDeathDatebyClusterLouvain.pdf'),height = 4.5/2.54,width=4.5/2.54,useDingbats = F)
 plot(ggplot_gtable(p))
 dev.off()
+save(df.all, file = paste0(params$sourcedata.dir,'FigS4b_SourceData_MoCAvsDateofDeath.RData'))
 
 # plot mean moca score
 clusterColors <- getClusterColors(k)
@@ -89,6 +90,7 @@ pdf.options(reset = TRUE, onefile = FALSE)
 pdf(file = file.path(savedir,'MeanMOCAbyClusterLouvain.pdf'),height = 4.5/2.54,width=4.5/2.54,useDingbats = F)
 plot(ggplot_gtable(p))
 dev.off()
+save(df, file = paste0(params$sourcedata.dir,'FigS4a_SourceData_MeanMoCA.RData'))
 
 # look by MOCA subscores
 COI <- grep('Total',colnames(cog))
@@ -112,7 +114,7 @@ ggsave(filename = file.path(savedir,'MOCASubscoreMeansbyClusterLouvain.pdf'),plo
        height = 3,width=5,units='in')
 
 df <- data.frame(x=rep(partitionSample,ncol(cog.moca)),y=as.vector(as.matrix(cog.moca)),g=rep(colnames(cog.moca),each=nrow(cog.moca)))
-save(df,file = paste(savedir,'Fig3a_SourceData.RData',sep=''))
+save(df,file = paste(params$sourcedata.dir,'Fig4a_SourceData.RData',sep=''))
 
 p <- ggplot(data=df,aes(x=x,y=y,fill=x)) + geom_boxplot(outlier.size=0.5) + theme_classic() +
   facet_wrap(~g) + scale_y_continuous(breaks=c(0:max(cog.moca))) + # make ticks only for 1:max moca subscore score, which is 6

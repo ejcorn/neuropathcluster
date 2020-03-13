@@ -29,8 +29,8 @@ if(params$dist.met == 'polychoric'){
   #W <- thresh.mat(W,'>',thresh.bestsil)
 }
 
-s <- sample(nrow(W),replace = F)
-melted_cormat <- melt(W[s,s])
+order.2a <- sample(nrow(W),replace = F)
+melted_cormat <- melt(W[order.2a,order.2a])
 melted_cormat$Var1 <- melted_cormat$Var1[length(melted_cormat$Var1):1]
 
 pal <- colorRampPalette(c('#8B0000','#c23b22','#ffffff','#779ecb','#00008b'))
@@ -45,7 +45,7 @@ p1 <- ggplot() +
         axis.ticks = element_blank(),axis.line = element_blank(),
         legend.position = 'none',
         #legend.key.height = unit(0.15,'in'),legend.key.width = unit(0.05,'in')
-        )
+  )
 #ggsave(p1,filename = 'results/subjectCorrShuffled.png',units = 'in',height = 3,width = 3)
 
 ########################
@@ -55,7 +55,7 @@ p1 <- ggplot() +
 k <- max(partition)
 k.Index <- lapply(1:k, function(k.i) which(partition == k.i)) 
 k.Labels <- lapply(1:k, function(i) c(matrix("",floor(0.5*length(k.Index[[i]]))), # make axis labels
-              paste('Cluster',i), c(matrix("",ceiling(0.5*length(k.Index[[i]])-1)))))
+                                      paste('Cluster',i), c(matrix("",ceiling(0.5*length(k.Index[[i]])-1)))))
 k.Labels <- Reduce(c,k.Labels)
 
 k.rect.idx <- fliplr(sapply(1:k, function(k.i) sum(partition == k.i)))
@@ -65,7 +65,8 @@ df <- data.frame(xmx = 1+cs.rect, xmi = c(1,1+cs.rect[-length(cs.rect)]))
 pal.k <- colorRampPalette(brewer.pal(name = 'Dark2',n=8))
 clusterColors <- pal.k(8)[(1:k)+2]
 
-melted_cormat <- melt(W[order(partition),order(partition)])
+order.2c <- order(partition)
+melted_cormat <- melt(W[order.2c,order.2c])
 melted_cormat$Var1 <- melted_cormat$Var1[length(melted_cormat$Var1):1]
 p2 <- ggplot() + 
   geom_tile(data = melted_cormat, aes(x=Var1, y=Var2, fill=value)) + xlab("") + ylab("") +
@@ -79,7 +80,7 @@ p2 <- ggplot() +
         axis.ticks = element_blank(),axis.line = element_blank(),
         legend.position = 'none'
         #legend.key.height = unit(0.15,'in'),legend.key.width = unit(0.05,'in')
-        )
+  )
 #ggsave(p2,filename = 'results/subjectCorrLouvain.png',units = 'in',height = 3,width = 3)
 
 #######################################
@@ -88,27 +89,27 @@ p2 <- ggplot() +
 
 list[patientSample,dz.short]<- other.dz(patientSample)
 
-dz.Names <- fliplr(sort(unique(as.character(patientSample$NPDx1))))
-dz.short <- fliplr(dz.short)
-list[dz.Index,dz.Labels]<- get.feature.labels(dz.Names,patientSample$NPDx1)
+dz.Names <- sort(unique(as.character(patientSample$NPDx1)))
+dz.short <- dz.short
+
+dz.Index <- lapply(dz.Names, function(name.i) which(patientSample$NPDx1==name.i))
+dz.Labels <- lapply(1:length(dz.Names), function(i) c(matrix("",floor(0.5*length(dz.Index[[i]]))),
+              dz.short[[i]], c(matrix("",ceiling(0.5*length(dz.Index[[i]])-1)))))
+dz.Index <- Reduce(c,dz.Index)
+dz.Labels <- Reduce(c,dz.Labels)
 for(i in 1:length(dz.Names)){dz.Labels[which(dz.Labels == dz.Names[i])] <- dz.short[i]} # replace long disease names with short labels
-# 
-# dz.Index <- lapply(dz.Names, function(name.i) grep(name.i, patientSample$NPDx1))
-# dz.Labels <- lapply(1:length(dz.Names), function(i) c(matrix("",floor(0.5*length(dz.Index[[i]]))),
-#               dz.short[[i]], c(matrix("",ceiling(0.5*length(dz.Index[[i]])-1)))))
-# dz.Index <- Reduce(c,dz.Index)
-# dz.Labels <- Reduce(c,dz.Labels)
 
 dz.rect.idx <- unlist(lapply(dz.Names, function(x) 
-  length(grep(x,patientSample$NPDx1[dz.Index]))))
-#dz.rect.idx <- fliplr(dz.rect.idx)
+  sum(patientSample$NPDx1[dz.Index]==x)))
+dz.rect.idx <- fliplr(dz.rect.idx)
 cs.rect <- cumsum(dz.rect.idx)
 df <- data.frame(xmx = 1+cs.rect, xmi = c(1,1+cs.rect[-length(cs.rect)]))
 
 pal.dz <- colorRampPalette(brewer.pal(name = 'Set3',n=12))
 dz.colors <- pal.dz(length(dz.Names))
 
-melted_cormat <- melt(W[dz.Index,dz.Index])
+order.2b <- dz.Index
+melted_cormat <- melt(W[order.2b,order.2b])
 melted_cormat$Var1 <- melted_cormat$Var1[length(melted_cormat$Var1):1]
 p3 <- ggplot() + 
   geom_tile(data = melted_cormat, aes(x=Var1, y=Var2, fill=value)) + xlab("") + ylab("") +
@@ -122,11 +123,11 @@ p3 <- ggplot() +
         axis.ticks = element_blank(),axis.line = element_blank(),
         legend.position = 'none'
         #legend.key.height = unit(0.15,'in'),legend.key.width = unit(0.05,'in')
-        )
+  )
 #ggsave(p3,filename = 'results/subjectCorrDisease.png',units = 'in',height = 3,width = 3)
 
 p1p2p3 <- plot_grid(plotlist=list(p1,p3,p2),align = 'hv',nrow=1)
 ggsave(p1p2p3,filename = paste(savedir,'subjectCorrMats.png',sep=''),
        units = 'in',height = 8/3,width = 8)
 
-save(W,dz.Names,partition,file = paste(savedir,'Figure2a-c_SourceData.RData',sep=''))
+save(W,order.2a,order.2b,order.2c,file = paste0(params$sourcedata.dir,'Fig2a-c_SourceData.RData'))

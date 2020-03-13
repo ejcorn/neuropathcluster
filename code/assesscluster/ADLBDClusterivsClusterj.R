@@ -45,17 +45,21 @@ ci.cj.list <- list(list(C.i = 2,C.j=4),list(C.i = 2, C.j = 5),list(C.i = 4, C.j 
 all.cluster.comps <- sort(unique(unlist(ci.cj.list))) # all clusters involved in comparison
 # first just plot pathology of AD-LBD patients in each cluster
 p.list <- list()
+source.data.list <- list()
 for(cl in all.cluster.comps){
   microSample.Cl <- microSample[as.character(INDDIDs)[partition==cl & dz.mask],]
   p.list[[as.character(cl)]] <- imagesc(region.by.item.matrix(matrix(colMedians(microSample.Cl),nrow=1,dimnames=list(NULL,names(microSample.Cl))),fxn = 'median'),cmap='Blues',clim=c(1,5),caxis_labels = pathScores) + ggtitle(paste('Cluster',cl,'AD + LBD')) + 
     theme(axis.text.x = element_text(angle=90,vjust=0.5,hjust=1),plot.title = element_text(hjust=0.5)) +
     nice_cbar(pos='right')
+  source.data.list[[paste('Cluster',cl)]] <- region.by.item.matrix(matrix(colMedians(microSample.Cl),nrow=1,dimnames=list(NULL,names(microSample.Cl))),fxn = 'median')
 }
 p <- plot_grid(plotlist = p.list,nrow=1)
 ggsave(plot = p,filename = paste0(savedir,'Cluster',paste0(all.cluster.comps,collapse=''),'MedianADSynPathology.pdf'),
        width = 18, height = 4, units = "cm")
+save(source.data.list,file = paste0(params$sourcedata.dir,'Fig3a-c_SourceData.RData'))
 
 p.list.diffs <- list()
+source.data.list <- list() # for source data
 for(ci.cj in ci.cj.list){
   C.i <- ci.cj$C.i
   C.j <- ci.cj$C.j
@@ -102,13 +106,19 @@ for(ci.cj in ci.cj.list){
   #melted_p$value[melted_p$value=='ns'] <- ''
   
   clim <- c(-2,2)
-  p.list.diffs[[paste0('c',C.i,'c',C.j)]]<- imagesc(region.by.item.matrix(diffs,fxn='median'),cmap='redblue',clim = clim,caxis_name = '') +ggtitle(paste('Cluster',C.i,'- Cluster',C.j)) + 
+  comp.name <- paste0('c',C.i,'c',C.j)
+  p.list.diffs[[comp.name]]<- imagesc(region.by.item.matrix(diffs,fxn='median'),cmap='redblue',clim = clim,caxis_name = '') +ggtitle(paste('Cluster',C.i,'- Cluster',C.j)) + 
     theme(axis.text.x = element_text(angle=90,vjust=0.5,hjust=1),plot.title = element_text(hjust=0.5)) +
     geom_text(data=melted_p,aes(x=Var1,y=Var2,label=value),size=2.5,color='white') +
     nice_cbar(pos='right')
   
+  source.data.list[[comp.name]]$comparison <- ci.cj
+  source.data.list[[comp.name]]$diffs <- region.by.item.matrix(diffs,fxn='median')
+  source.data.list[[comp.name]]$p.values <- t(region.by.item.matrix(pvals))
 }
 
 p <- plot_grid(plotlist = p.list.diffs,nrow=1)
 ggsave(plot = p,filename = paste0(savedir,'Cluster',paste0(all.cluster.comps,collapse=''),'MedianADSynPathologyComparison.pdf'),
        width = 18, height = 4, units = "cm")
+names(source.data.list) <- c('Fig3d','Fig3e','Fig3f')
+save(source.data.list,file = paste0(params$sourcedata.dir,'Fig3d-f_SourceData.RData'))

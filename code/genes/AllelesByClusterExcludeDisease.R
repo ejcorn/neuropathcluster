@@ -119,8 +119,8 @@ for(g.i in names(betas)){
     list[bmat,pmat] <- list(betas[[g.i]][[a.i]],pvals[[g.i]][[a.i]])
     latex[[g.i]][[a.i]] <- matrix(paste0('$\\beta=',signif(bmat,2),'$, $df=',deg.freedom[[g.i]],'$, $p_\\mathrm{FDR}=',signif(pmat,2),'$'),
                                   k,k,dimnames = list(clusterNames,clusterNames))
-    if(dz.exc == 'Alzheimer\'s disease'){save(bmat,pmat,file = paste(savedir,'FigS5c-e',g.i,'-',a.i,'_SourceData.RData',sep=''))}
-    if(dz.exc == 'PSP'){save(bmat,pmat,file = paste(savedir,'FigS6a-b',g.i,'-',a.i,'_SourceData.RData',sep=''))}
+    if(dz.exc == 'Alzheimer\'s disease'){save(bmat,pmat,file = paste(params$sourcedata.dir,'FigS12c-e_SourceData_',g.i,'-',a.i,'Exclude',dz.exc,'From',paste(exc.cl,collapse=','),'.RData',sep=''))}
+    if(dz.exc == 'PSP'){save(bmat,pmat,file = paste(params$sourcedata.dir,'FigS13a-b_SourceData_',g.i,'-',a.i,'Exclude',dz.exc,'From',paste(exc.cl,collapse=','),'.RData',sep=''))}
   }
   p.all <- plot_grid(plotlist = plots[[g.i]], align = 'hv',nrow=1)
   ggsave(filename = paste(savedir,g.i,'BetasExclude',dz.exc,'FromC',paste0(exc.cl,collapse=','),'NDx',n.dx,'.pdf',sep=''),plot = p.all,

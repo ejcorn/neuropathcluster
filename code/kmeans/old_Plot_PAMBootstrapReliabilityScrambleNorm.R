@@ -38,16 +38,15 @@ names(df.sub.scramble) <- as.character(thresh.rng)
 
 max.sil <- max(do.call('rbind',df.sub)$sil) # scale y axis of all plots the same -- based on data
 p.list.silhouette <- lapply(as.character(thresh.rng),function(t) ggplot() + #geom_line(data=df.full[[t]],aes(x=k,y=sil)) + #theme_classic() +
-                              geom_boxplot(data=rbind(df.sub[[t]],df.sub.scramble[[t]]),aes(x=as.character(k),y=sil,fill=null.or.data),size=0.25,outlier.size = 0.5)+
-                              scale_x_discrete(limits=as.character(k.rng),breaks = as.character(k.rng)) + 
-                              scale_y_continuous(limits=c(-0.05,max.sil)) + scale_fill_manual(values=c("#C6CDF7",'grey70'))+
-                              xlab('k') + ylab('Mean Silhouette') + ggtitle(paste('Threshold =',t))+ theme_bw()+
-                              theme(text=element_text(size=8),legend.position = 'none')+
-                              theme(plot.title = element_text(hjust=0.5,size=8),axis.text.x = element_text(size=6),text=element_text(color='black')))
+                   geom_boxplot(data=rbind(df.sub[[t]],df.sub.scramble[[t]]),aes(x=as.character(k),y=sil,fill=null.or.data),size=0.25,outlier.size = 0.5)+
+                   scale_x_discrete(limits=as.character(k.rng),breaks = as.character(k.rng)) + 
+                   scale_y_continuous(limits=c(-0.05,max.sil)) + scale_fill_manual(values=c("#C6CDF7",'grey70'))+
+                   xlab('k') + ylab('Mean Silhouette') + ggtitle(paste('Threshold =',t))+ theme_bw()+
+                   theme(text=element_text(size=8),legend.position = 'none')+
+                   theme(plot.title = element_text(hjust=0.5,size=8),axis.text.x = element_text(size=6),text=element_text(color='black')))
 p.silhouette <- plot_grid(plotlist = p.list.silhouette)
 ggsave(filename = paste0(savedir,'PAM_ScramblevsDataBootstrapMeanSilhouetteByKByThresh_',params$dist.met,'SF',sampfrac,'.pdf'),plot = p.silhouette,
-       height = 8,width=14,units='cm',useDingbats=FALSE)
-save(thresh.rng,df.sub,df.sub.scramble,max.sil,file=paste0(params$sourcedata.dir,'FigS6a-c,e-g_SourceData_SilhouetteByThreshByK.RData'))
+       height = 8,width=14,units='cm')
 
 # 2.	For each Bootstrap, figure out best threshold (by peak silhouette.
 
@@ -61,11 +60,57 @@ p.mean.sil <- ggplot(df.plot) + geom_boxplot(aes(x=as.character(thresh),y=sil),f
   ylab('Mean Silhouette') + xlab('Threshold')
 ggsave(filename = paste0(savedir,'PAM_BootstrapMeanSilhouetteByThresh_',params$dist.met,'SF',sampfrac,'.pdf'),plot = p.mean.sil,
        height = 4,width=4,units='cm')
-save(df.plot,file=paste0(params$sourcedata.dir,'FigS6d_SourceData_MeanSilhouetteByThresh.RData'))
-# 3. load similarity between every pair of bootstrapped partitions wrt overlappinig elements 
-# calculated by PartititionSimilarity_PAMBootstrapReliabilityScrambleNorm.R
 
-load(file=paste0(savedir,'PartitionSimilarity_ActualAndScramble_ClusterBootstrapping_SF',sampfrac,'.RData'))
+# pick threshold with highest mean silhouette
+thresh.bestsil <- thresh.rng[which.max(rowMeans(silhouette.by.thresh))]
+
+# 3. for each Bootstrap, compute similarity of partitions wrt overlappinig elements
+# http://psb.stanford.edu/psb-online/proceedings/psb02/benhur.pdf
+# need a similarity metric: matching coefficient, jaccard, rand ... should be similar
+# alternatively can predict cluster for remaining samples
+# https://people.eecs.berkeley.edu/~jordan/sail/readings/luxburg_ftml.pdf
+#
+# bootstrapping:
+# http://www.indigo.lib.uic.edu:8080/bitstream/handle/10027/8612/bootstrap_clustering_revision.pdf?sequence=1&isAllowed=y
+# k-medoids: Kaufman and Rousseeuw, 1990
+
+library(clusteval)
+
+partition.sim.mat <- list()
+for(k in k.rng){
+  print(paste('k =',k))
+  partition.sim.mat[[k]] <- matrix(NA,nreps,nreps)
+  for(R1 in 1:nreps){
+    for(R2 in 1:nreps){
+      partition1 <- clust.thresh[[R1]][[which(thresh.rng==thresh.bestsil)]][[which(k.rng==k)]]$clustering
+      partition2 <- clust.thresh[[R2]][[which(thresh.rng==thresh.bestsil)]][[which(k.rng==k)]]$clustering
+      
+      # extract partition on joint sample
+      partition1.union <- partition1[names(partition1) %in% names(partition2)]
+      partition2.union <- partition2[names(partition2) %in% names(partition1)]
+      partition2.union <- partition2.union[names(partition1.union)]
+      partition.sim.mat[[k]][R1,R2] <- cluster_similarity(partition1.union,partition2.union,similarity = 'jaccard')
+    }
+  }
+}
+
+partition.sim.mat.scramble <- list()
+for(k in k.rng){
+  print(paste('k =',k))
+  partition.sim.mat.scramble[[k]] <- matrix(NA,nreps,nreps)
+  for(R1 in 1:nreps){
+    for(R2 in 1:nreps){
+      partition1 <- clust.thresh.scramble[[R1]][[which(thresh.rng==thresh.bestsil)]][[which(k.rng==k)]]$clustering
+      partition2 <- clust.thresh.scramble[[R2]][[which(thresh.rng==thresh.bestsil)]][[which(k.rng==k)]]$clustering
+      
+      # extract partition on joint sample
+      partition1.union <- partition1[names(partition1) %in% names(partition2)]
+      partition2.union <- partition2[names(partition2) %in% names(partition1)]
+      partition2.union <- partition2.union[names(partition1.union)]
+      partition.sim.mat.scramble[[k]][R1,R2] <- cluster_similarity(partition1.union,partition2.union,similarity = 'jaccard')
+    }
+  }
+}
 
 mean.jac <- sapply(partition.sim.mat[-1], function(X) mean(X*as.numeric(!diag(nreps)))) # ignore diagonals, remove k =1
 p <- ggplot() + geom_line(aes(x=k.rng,y=mean.jac),color="#7294D4") + theme_bw() + scale_y_continuous(limits=c(0,5)) +
@@ -93,7 +138,6 @@ p.auc.norm <- ggplot() + geom_line(aes(x=k.rng,y=(1-k.auc)/(1-k.auc.scramble)),c
   ggtitle(paste('Threshold =',thresh.bestsil)) + ylab('1 - AUC(Jaccard CDF)') + xlab('k') + theme(text=element_text(size=8),plot.title = element_text(hjust=0.5))
 ggsave(filename = paste0(savedir,'PAM_ScrambledNormalizedBootstrapAUC_',params$dist.met,'SF',sampfrac,'.pdf'),plot = p,
        height = 4,width=4,units='cm')
-save(k.rng,k.auc,k.auc.scramble,file=paste0(params$sourcedata.dir,'FigS6h_SourceData_AUCJaccardCDF.RData'))
 
 # align all plots into one figure
 p.right <- plot_grid(plotlist=list(p.mean.sil,p.auc.norm),ncol=1)

@@ -59,13 +59,13 @@ clusters <- clusters[,cluster.counts != 0] # remove columns if Rem.Cl removed th
 ############################
 
 dz.res <- kfold.GLM(x=df,y=dx,k.folds=5,nreps=100)
-#cluster.res <- kfold.GLM(x=df,y=clusters,nreps=100,k.folds=5)
+cluster.res <- kfold.GLM(x=df,y=clusters,nreps=100,k.folds=5)
 
 ########################
 ### Save performance ###
 ########################
 
-#save(cluster.res, file = paste(savedir,'predictcluster_GLMperf',extralab,'Exclude',dz.exc,'.RData',sep=''))
+save(cluster.res, file = paste(savedir,'predictcluster_GLMperf',extralab,'Exclude',dz.exc,'.RData',sep=''))
 save(dz.res,df, file = paste(savedir,'predictdz_GLMperf',extralab,'Exclude',dz.exc,'.RData',sep=''))
 
 #####################
@@ -73,7 +73,7 @@ save(dz.res,df, file = paste(savedir,'predictdz_GLMperf',extralab,'Exclude',dz.e
 #####################
 
 dz.res <- kfold.RF(x=df,y=dx,nreps=100,k.folds=5)
-#cluster.res <- kfold.RF(x=df,y=clusters,nreps=100,k.folds=5)
+cluster.res <- kfold.RF(x=df,y=clusters,nreps=100,k.folds=5)
 
-#save(cluster.res, file = paste(savedir,'predictcluster_RFperf',extralab,'Exclude',dz.exc,'.RData',sep=''))
+save(cluster.res, file = paste(savedir,'predictcluster_RFperf',extralab,'Exclude',dz.exc,'.RData',sep=''))
 save(dz.res,df, file = paste(savedir,'predictdz_RFperf',extralab,'Exclude',dz.exc,'.RData',sep=''))

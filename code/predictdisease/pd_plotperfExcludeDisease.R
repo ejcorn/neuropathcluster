@@ -23,8 +23,8 @@ dz.colors <- pal(9)[3:(3+length(dz.res)-1)] # pick good range of blues
 
 setups <- list(Clusters=list(colors=clusterColors,res=cluster.res),
      Diseases=list(colors=dz.colors,res=dz.res))
-for(setup in names(setups)){
-  setup <- setups[[setup]] # run through set ups
+for(setup.name in names(setups)){
+  setup <- setups[[setup.name]] # run through set ups
   colors.setup <- setup$colors # extract colors
   res <- setup$res  # extract data
   
@@ -39,17 +39,14 @@ for(setup in names(setups)){
   p.list <- list(p.sen,remove.y.ticklabels(p.spec),remove.y.ticklabels(p.auc),p.roc)
   p.all <- plot_grid(plotlist = p.list, align = 'h',nrow=1,axis = 'b',rel_widths = c(1.2,1,1,1))
   
-  if(extralab == "CSFOnlyExcludeAlzheimer's disease"){
-    if(setup == 'Clusters'){
-      FigS11ab <- lapply(p.list,function(X) X$data)
-  	  save(FigS11ab,file = paste(savedir,'FigS11a-b_',extralab,'SourceData.RData',sep=''))
-    } else if(setup == 'Diseases'){
-      FigS11cd <- lapply(p.list,function(X) X$data)
-      save(FigS11cd,file = paste(savedir,'FigS11c-d_',extralab,'SourceData.RData',sep=''))
+  if(extralab == "CSFOnlyAddNormalMMSEExcludeAlzheimer's disease"){
+    if(setup.name == 'Clusters'){
+      FigS17ab <- lapply(p.list,function(X) X$data)
+  	  save(FigS17ab,file = paste(params$sourcedata.dir,'FigS17a-b_',extralab,'SourceData.RData',sep=''))
     }
   }
   
-  ggsave(filename = paste(savedir,'GLMPerformance',setup,extralab,'FromC',paste0(exc.cl,collapse=','),'NDx',n.dx,'.pdf',sep=''),plot = p.all,
+  ggsave(filename = paste(savedir,'GLMPerformance',setup.name,extralab,'FromC',paste0(exc.cl,collapse=','),'NDx',n.dx,'.pdf',sep=''),plot = p.all,
          height = 5,width=18,units='cm')
 }
 
@@ -59,8 +56,8 @@ load(file = paste(savedir,'predictdz_RFperf',extralab,'.RData',sep=''))
 setups <- list(Clusters=list(colors=clusterColors,res=cluster.res),
                Diseases=list(colors=dz.colors,res=dz.res))
 
-for(setup in names(setups)){
-  setup <- setups[[setup]] # run through set ups
+for(setup.name in names(setups)){
+  setup <- setups[[setup.name]] # run through set ups
   colors.setup <- setup$colors # extract colors
   res <- setup$res  # extract data
   
@@ -77,6 +74,13 @@ for(setup in names(setups)){
   	align = 'h',nrow=1,axis = 'b',
   		rel_widths = c(1.2,1,1,1))
   
-  ggsave(filename = paste(savedir,'RFPerformance',setup,extralab,'FromC',paste0(exc.cl,collapse=','),'NDx',n.dx,'.pdf',sep=''),plot = p.all,
+  if(extralab == "CSFGeneAddNormalMMSEExcludeAlzheimer's disease"){
+    if(setup.name == 'Clusters'){
+      FigS17cd <- lapply(p.list,function(X) X$data)
+      save(FigS17cd,file = paste(params$sourcedata.dir,'FigS17c-d_',extralab,'SourceData.RData',sep=''))
+    }
+  }
+  
+  ggsave(filename = paste(savedir,'RFPerformance',setup.name,extralab,'FromC',paste0(exc.cl,collapse=','),'NDx',n.dx,'.pdf',sep=''),plot = p.all,
          height = 5,width=18,units='cm')
 }

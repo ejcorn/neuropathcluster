@@ -64,7 +64,7 @@ if(grepl('CSFGene',extralab)){w.multiplier <- 1.22; h.multiplier <- 0.88}
 ggsave(filename = paste(savedir,'RFPerformanceClustersDisease',extralab,'.pdf',sep=''),plot = p.all,
        height = 14*h.multiplier,width=19*w.multiplier,units='cm')
 
-if(grepl('CSFGene',extralab)){
-  FigS8ad <- lapply(c(p.d.list,p.c.list),function(X) X$data)
-	save(FigS8ad,file = paste(savedir,'FigS8a-d_',extralab,'SourceData.RData',sep=''))
+if('CSFGeneAddNormalMMSE' == extralab){
+  FigS15ad <- lapply(c(p.d.list,p.c.list),function(X) X$data)
+	save(FigS15ad,file = paste(params$sourcedata.dir,'FigS15a-d_',extralab,'SourceData.RData',sep=''))
 }

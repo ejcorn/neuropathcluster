@@ -51,7 +51,7 @@ for(g.i in names(Genes.df)){
   df <- data.frame(y=as.vector(Genotype.Proportions),
                    g=as.vector(sapply(clusterNames, function(i) matrix(rownames(Genotype.Proportions),ncol=1))),
                    x=rep(clusterNames,each=nrow(Genotype.Proportions)))
-  save(df,file=paste(savedir,'Fig4a-b_',g.i,'SourceData.RData',sep=''))
+  save(df,file=paste(params$sourcedata.dir,'Fig5a-b_',g.i,'SourceData.RData',sep=''))
 
   p <- ggplot(data=df,aes(y=y,x=x,fill=g)) + geom_col(position=position_dodge(width = 0.9)) + theme_classic()+ 
     scale_fill_brewer(palette=p.names[[g.i]],name='') + scale_y_continuous(limits=c(0,1)) +

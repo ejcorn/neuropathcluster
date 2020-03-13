@@ -38,3 +38,4 @@ p <- imagesc(microSample[idx,],cmap = 'Blues',clim=c(1,5),caxis_labels = c('0','
 
 ggsave(p,filename = paste0(savedir,'PathologyMatrixClustered.pdf'),
        units= 'cm',height = 12,width=18.5)
+save(microSample,idx,file=paste0(params$sourcedata.dir,'FigS8a_SourceData_PathMatrix.RData'))

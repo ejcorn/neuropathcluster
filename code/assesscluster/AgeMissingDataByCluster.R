@@ -63,6 +63,7 @@ for(age.lab in names(age.data)){
   plot(ggplot_gtable(p)) #+ scale_y_continuous(limits=c(0,ymax))
   dev.off()
   
+  save(df,file=paste0(params$sourcedata.dir,'FigS5a-c_SourceData_',age.lab,'.RData'))
   p <- ggplot(df) + geom_violin(aes(x=g,y=y,fill=g)) + 
     scale_y_continuous(breaks=seq(20,110,by = 20),limits=c(10,NA)) +
   	scale_fill_manual(breaks = clusterNames, 
@@ -147,6 +148,7 @@ pdf.options(reset = TRUE, onefile = FALSE)
 pdf(file = paste(savedir,'/MissingFeaturesByClusterByTypePairwiseWilcox.pdf',sep=''),height = unit(9,'in'),width=unit(9,'in'),useDingbats = F)
 plot(ggplot_gtable(p)) #+ scale_y_continuous(limits=c(0,ymax))
 dev.off()
+save(df,file=paste0(params$sourcedata.dir,'FigS3a-g_SourceData_MissingDataByCluster.RData'))
 
 p <- ggplot(data=df,aes(x=g,y=y,fill=g)) + geom_jitter(alpha=0.5,stroke=0,size=0.5) + theme_classic()+
   facet_wrap(~x,scales='free',nrow=2) +
@@ -192,5 +194,5 @@ race.table <- cbind(race.by.cluster,race.overall)
 colnames(race.table) <- c(clusterNames,'Overall')
 rownames(race.table) <- paste(unique(race),'(%)')
 
-lt <- xtable(x=signif(rbind(sex.table,race.table),3),caption = 'Table 1. Sex and race by cluster and in overall sample.',label='table:sexbycluster')
-write.table(x=print(lt),file = paste0(savedir,'SexAndRaceByClusterTable.txt'),row.names = F,col.names = F)
+lt <- xtable(x=signif(rbind(sex.table,race.table),3),caption = 'Sex and race by cluster and in overall sample.',label='table:sexbycluster')
+write.table(x=print(lt),file = paste0(params$sourcedata.dir,'TableS1_SourceData_SexRaceByCluster.txt'),row.names = F,col.names = F)
