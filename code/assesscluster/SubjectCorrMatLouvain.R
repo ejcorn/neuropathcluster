@@ -127,7 +127,7 @@ p3 <- ggplot() +
 #ggsave(p3,filename = 'results/subjectCorrDisease.png',units = 'in',height = 3,width = 3)
 
 p1p2p3 <- plot_grid(plotlist=list(p1,p3,p2),align = 'hv',nrow=1)
-ggsave(p1p2p3,filename = paste(savedir,'subjectCorrMats.png',sep=''),
-       units = 'in',height = 8/3,width = 8)
+ggsave(p1p2p3,filename = paste(savedir,'subjectCorrMats.pdf',sep=''),
+       units = 'in',height = 8/3,width = 8,dpi = 300)
 
 save(W,order.2a,order.2b,order.2c,file = paste0(params$sourcedata.dir,'Fig2a-c_SourceData.RData'))

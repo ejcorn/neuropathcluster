@@ -47,7 +47,7 @@ p.list.silhouette <- lapply(as.character(thresh.rng),function(t) ggplot() + #geo
 p.silhouette <- plot_grid(plotlist = p.list.silhouette)
 ggsave(filename = paste0(savedir,'PAM_ScramblevsDataBootstrapMeanSilhouetteByKByThresh_',params$dist.met,'SF',sampfrac,'.pdf'),plot = p.silhouette,
        height = 8,width=14,units='cm',useDingbats=FALSE)
-save(thresh.rng,df.sub,df.sub.scramble,max.sil,file=paste0(params$sourcedata.dir,'FigS6a-c,e-g_SourceData_SilhouetteByThreshByK.RData'))
+save(thresh.rng,df.sub,df.sub.scramble,max.sil,file=paste0(params$sourcedata.dir,'FigS7a-c,e-g_SourceData_SilhouetteByThreshByK.RData'))
 
 # 2.	For each Bootstrap, figure out best threshold (by peak silhouette.
 
@@ -61,7 +61,7 @@ p.mean.sil <- ggplot(df.plot) + geom_boxplot(aes(x=as.character(thresh),y=sil),f
   ylab('Mean Silhouette') + xlab('Threshold')
 ggsave(filename = paste0(savedir,'PAM_BootstrapMeanSilhouetteByThresh_',params$dist.met,'SF',sampfrac,'.pdf'),plot = p.mean.sil,
        height = 4,width=4,units='cm')
-save(df.plot,file=paste0(params$sourcedata.dir,'FigS6d_SourceData_MeanSilhouetteByThresh.RData'))
+save(df.plot,file=paste0(params$sourcedata.dir,'FigS7d_SourceData_MeanSilhouetteByThresh.RData'))
 # 3. load similarity between every pair of bootstrapped partitions wrt overlappinig elements 
 # calculated by PartititionSimilarity_PAMBootstrapReliabilityScrambleNorm.R
 
@@ -93,10 +93,10 @@ p.auc.norm <- ggplot() + geom_line(aes(x=k.rng,y=(1-k.auc)/(1-k.auc.scramble)),c
   ggtitle(paste('Threshold =',thresh.bestsil)) + ylab('1 - AUC(Jaccard CDF)') + xlab('k') + theme(text=element_text(size=8),plot.title = element_text(hjust=0.5))
 ggsave(filename = paste0(savedir,'PAM_ScrambledNormalizedBootstrapAUC_',params$dist.met,'SF',sampfrac,'.pdf'),plot = p,
        height = 4,width=4,units='cm')
-save(k.rng,k.auc,k.auc.scramble,file=paste0(params$sourcedata.dir,'FigS6h_SourceData_AUCJaccardCDF.RData'))
+save(k.rng,k.auc,k.auc.scramble,file=paste0(params$sourcedata.dir,'FigS7h_SourceData_AUCJaccardCDF.RData'))
 
 # align all plots into one figure
 p.right <- plot_grid(plotlist=list(p.mean.sil,p.auc.norm),ncol=1)
 p.all <- plot_grid(plotlist=list(p.silhouette,p.right),rel_widths = c(3,1),nrow=1)
-ggsave(filename = paste0(savedir,'FigS6_',params$dist.met,'SF',sampfrac,'.pdf'),plot = p.all,
+ggsave(filename = paste0(savedir,'FigS7_',params$dist.met,'SF',sampfrac,'.pdf'),plot = p.all,
        height = 8,width=18,units='cm',useDingbats = FALSE)

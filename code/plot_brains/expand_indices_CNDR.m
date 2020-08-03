@@ -16,7 +16,8 @@ for i = 1:length(indices)
     elseif idx == 4
         query = {'middlefrontal'};
     elseif idx == 5
-        query = {'superiorparietal','precuneus'};
+        %query = {'inferiorparietal'};
+        query = cellfun(@(x) sprintf('inferiorparietal_%d',x),num2cell([2:6]),'UniformOutput',false);
     elseif idx == 6
         query = {'entorhinal'};        
     end

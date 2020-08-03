@@ -6,7 +6,7 @@ library(RColorBrewer)
 homedir <- '~/Dropbox/Neurodegeneration/PathCogClinDx/neuropathcluster/code/plot_brains/schematic'
 setwd(homedir)
 
-roi_names <- list('Cingulate Cortex','Superior-middle temporal cortex',
+roi_names <- list('Anterior Cingulate Cortex','Superior-middle temporal cortex',
                   'Middle frontal cortex','Angular gyrus','Entorhinal Cortex',
                   'Thalamus','Caudate-putamen','Globus pallidus','Hippocampus','Amygdala',
                   'Midbrain','Pons','Medulla','Cerebellum')
@@ -77,3 +77,14 @@ p <- ggplot(df) + geom_col(aes(x=x,y=y,fill=x)) +
         text=element_text(size=6)) +
   xlab('Cluster') + ylab('# of Patients')
 ggsave(plot=p,filename = 'mock_ClusterMembership.pdf',units='cm',width=2,height=2)
+
+
+## make table with region names
+roi_abbrevs <- c('Cing','SMT','MF','Ang','CS','EC','Amyg','TS','CP','GP','SN','Med','CB','Pons','MB')
+roi_long <- c('Anterior cingulate cortex','Superior-middle temporal cortex',
+                  'Middle frontal cortex','Angular gyrus','CA1/Subiculum','Entorhinal cortex',
+                  'Amygdala','Thalamus','Caudate-putamen','Globus pallidus','Substantia nigra',
+                  'Medulla','Cerebellum','Pons','Midbrain')
+x <- data.frame(Abbreviation=roi_abbrevs,Region=roi_long)
+#rownames(x) <-NULL
+print(xtable(x,caption='Definition of brain region abbreviations.',label='table:brainregions'), include.rownames=FALSE)

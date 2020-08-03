@@ -19,6 +19,8 @@ patientSample <- remove.Disconnected.Subjects(patientSample,DisconnectedSubjects
 
 demo <- read.csv(paste(homedir,'data/INDD_GlobalDemographics122219.csv',sep=''))
 onset <- read.csv(paste0('data/INDD_GlobalOnset122219.csv'),stringsAsFactors = F)
+rownames(onset) <- as.character(onset$INDDID)
+onset <- onset[as.character(INDDIDs),]
 
 demo <- demo[demo$INDDID %in% INDDIDs,]	# only look at patients in our sample
 age.death <- demo$AgeatDeath # extract age.death at death
@@ -37,8 +39,11 @@ clusterColors <- getClusterColors(k)
 partition.names <- sapply(partition, function(i) paste('Cluster',i))
 names(partition.names) <- INDDIDs
 
+AD.status.oi <- c('Low','Intermediate','High') # when subsetting age of onset in only AD patients, how to define AD
+AD.mask <- patientSample$ADStatus %in% AD.status.oi
 age.data <- list(AgeAtDeath=data.frame(INDDID=INDDIDs,y=age.death),
                  AgeOnset=data.frame(INDDID=onset$INDDID,y=age.onset),
+                 AgeOnsetAD = data.frame(INDDID=INDDIDs[AD.mask],y=onset$GlobalAgeOnset[AD.mask]),
                  # add disease duration
                  AutopsyDate=data.frame(INDDID=INDDIDs,y=as.Date(patientSample$AutopsyDate)))
 date.breaks.p <- seq.Date(as.Date('1990/01/01'),as.Date('2020/01/01'),by = '5 years')
@@ -194,5 +199,7 @@ race.table <- cbind(race.by.cluster,race.overall)
 colnames(race.table) <- c(clusterNames,'Overall')
 rownames(race.table) <- paste(unique(race),'(%)')
 
-lt <- xtable(x=signif(rbind(sex.table,race.table),3),caption = 'Sex and race by cluster and in overall sample.',label='table:sexbycluster')
+xtab <- signif(rbind(sex.table,race.table),3)
+
+lt <- xtable(x=xtab,caption = 'Sex and race by cluster and in overall sample.',label='table:sexbycluster')
 write.table(x=print(lt),file = paste0(params$sourcedata.dir,'TableS1_SourceData_SexRaceByCluster.txt'),row.names = F,col.names = F)

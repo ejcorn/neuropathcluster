@@ -49,7 +49,7 @@ extract.CSF.sample <- function(CSF,CSF.type,n.sample='first'){
 	if(n.sample == 'first'){
 		CSF.sample <- do.call('rbind',lapply(CSF.by.pt, function(X) X[1,])) # just use first available sample
 	} else if(n.sample == 'last'){
-		CSF.sample <- do.call('rbind',lapply(CSF.by.pt, function(X) X[nrow(X),])) # just use first available sample
+		CSF.sample <- do.call('rbind',lapply(CSF.by.pt, function(X) X[nrow(X),])) # just use last available sample
 	}
 	# for some patients, could compute a feature based on change in CSF proteins
 	#CSF.diff <- do.call('rbind',lapply(CSF.by.pt, function(X) X[nrow(X),] - X[1,]))

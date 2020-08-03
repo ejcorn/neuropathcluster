@@ -255,6 +255,24 @@ plot.model.roc <- function(met,colors,ttl=''){
   return(p.roc)
 }
 
+plot.model.pr <- function(met,colors,ttl=''){
+
+  colors <- colorswap(colors,met)
+  auprc <- lapply(met, function(a) sapply(a, function(c) c$AUPRC))
+  which.prc <- sapply(auprc, function(a) which.min(abs(a-mean(a)))) # find AUC value closest to mean AUC  
+  pr.objs <- mapply(function(X,Y) {list(X[[Y]]$pr.obj)}, X=met,Y=which.prc)
+  df.plt <- do.call(rbind,lapply(names(pr.objs), function(X) cbind(as.data.frame(pr.objs[[X]]$curve[,1:2]),X)))
+  colnames(df.plt) <- c('Recall','Precision','Group')
+  prc <-  ggplot(df.plt,alpha=0.6,size=1,legacy.axes=TRUE) + 
+  geom_line(aes(x=Recall,y=Precision,color=Group))+
+    theme_classic() + scale_color_manual(limits =names(met),values= colors) +
+    ylab('Precision') + xlab('Recall') + ggtitle(ttl) + 
+    theme(text = element_text(size=8), plot.title = element_text(hjust=0.5),
+      legend.position = 'none', plot.margin = unit(c(0, 0, 0, 0), "cm"),
+      axis.title.y=element_text(vjust=-1))
+  return(prc)
+}
+
 remove.y.ticklabels <- function(p){
   # remove y ticklabels and tickmarks from ggplot object p
   p <- p + theme(axis.text.y = element_blank(),axis.ticks.y=element_blank())
@@ -409,6 +427,11 @@ imagesc <- function(X,caxis_name='',cmap='plasma',caxis_labels=NULL,clim=c(min(X
     p <- p + scale_fill_gradientn(colours = c('#8B0000','#c23b22','#ffffff','#779ecb','#00008b'),
                            guide = "colorbar", limits=clim,
                            na.value = 'grey',name=caxis_name)
+  } else if(cmap == 'redblue_asymmetric'){
+    p <- p + scale_fill_gradientn(colours = c('#8B0000','#c23b22','#ffffff','#779ecb','#00008b'),
+                           values = scales::rescale(c(clim[1],0,clim[2])),
+                           guide = "colorbar", limits=clim,
+                           na.value = 'white',name=caxis_name)
   } else {
     pal.idx <- which(rownames(brewer.pal.info) == cmap)  
     cols <- brewer.pal(brewer.pal.info$maxcolors[pal.idx], cmap)
@@ -441,4 +464,32 @@ colorvis <- function(COL){
   plot(NULL, xlim=c(0,length(COL)), ylim=c(0,1), 
        xlab="", ylab="", xaxt="n", yaxt="n")
   rect(0:(length(COL)-1), 0, 1:length(COL), 1, col=COL)
+}
+
+p.xyc <- function(x,y,ca,cmap='Set1',xlab='',ylab='',ttl='',col='black',alpha=1){
+  # INPUTS:
+  # x: x variable, vector
+  # y: y variable, vector
+  # ca: variable that scales color axis
+  # cmap: RColorBrewer palette name
+  # xlab, ylab, ttl: character labels for axes
+  # col: line color, RGB hex code or R native color or RGB value
+  # alpha: opacity of points
+  #
+  # OUTPUTS:
+  # scatter plot with r and p value for pearson correlation between x and y
+  # and linear fit
+
+  df <- data.frame(x=x,y=y)
+  c.test <- cor.test(df$x,df$y,use='pairwise.complete.obs')
+  r.text <- paste0('r = ',signif(c.test$estimate,2),'\np = ',signif(c.test$p.value,2)) # annotation
+
+  p <- ggplot(df) + geom_point(aes(x=x,y=y,color=ca),stroke=0,alpha=alpha) + geom_smooth(aes(x=x,y=y),fill=col,color=col,method='lm') + 
+    xlab(xlab) + ylab(ylab) + ggtitle(ttl) + 
+    scale_color_brewer(palette=cmap) +
+    annotate("text",size = 2, x = Inf,y =-Inf, label = r.text,hjust=1,vjust=-0.2) +
+      theme_classic() + theme(text = element_text(size = 8)) + 
+      theme(plot.title = element_text(size=8,hjust=0.5,face = "bold")) +
+      theme(plot.margin=grid::unit(c(0,0,0,0), "mm")) + theme(legend.position = 'none')
+  return(p)
 }

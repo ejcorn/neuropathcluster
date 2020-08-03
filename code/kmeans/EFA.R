@@ -12,9 +12,6 @@ patientSample <- read.csv(paste(params$opdir,'processed/patientSample.csv',sep='
 load(file = paste0(savedir,'microSampleImputedmiceRF.RData'))
 
 INDDIDs <- read.csv(paste(params$opdir,'processed/microSample.csv',sep=''),stringsAsFactors=F)[,2]
-microSample <- remove.Disconnected.Subjects(microSample,DisconnectedSubjects)
-patientSample <- remove.Disconnected.Subjects(patientSample,DisconnectedSubjects)
-INDDIDs <- remove.Disconnected.Subjects(INDDIDs,DisconnectedSubjects)
 
 #######################
 ### factor analysis ###
@@ -22,6 +19,7 @@ INDDIDs <- remove.Disconnected.Subjects(INDDIDs,DisconnectedSubjects)
 
 summary(microSample.imp)
 microSample.imp <- complete(microSample.imp,1)
+colnames(microSample.imp) <- colnames(microSample)
 
 library(psych)
 library(GPArotation)
@@ -42,6 +40,19 @@ names(explained) <- paste0('F',1:nf)
 
 save(fa.path,loadings,scores,explained,file = paste0(savedir,'FactorAnalysis.RData'))
 
+###########
+### PCA ###
+###########
+W <- polychoric(microSample.imp)
+pc <- principal(r=W$rho,rotate='none',nf)
+explained <- pc$Vaccounted['Proportion Explained',]
+scores <- factor.scores(microSample.imp,pc)
+loadings <- scores$weights
+scores <- scores$scores
+colnames(scores) <- paste0('F',1:nf)
+scores <- as.data.frame(scores)
+save(pc,loadings,scores,explained,file = paste0(savedir,'PolychoricPCA.RData'))
+ggplot() + geom_boxplot(aes(y=scores[,'F3'],x=patientSample$NPDx1)) + theme(axis.text.x=element_text(angle=90))
 ### below is not used ###
 
 # imagesc(cor(scores),clim = c(-1,1))

@@ -116,18 +116,6 @@ ggsave(filename = file.path(savedir,'MOCASubscoreMeansbyClusterLouvain.pdf'),plo
 df <- data.frame(x=rep(partitionSample,ncol(cog.moca)),y=as.vector(as.matrix(cog.moca)),g=rep(colnames(cog.moca),each=nrow(cog.moca)))
 save(df,file = paste(params$sourcedata.dir,'Fig4a_SourceData.RData',sep=''))
 
-p <- ggplot(data=df,aes(x=x,y=y,fill=x)) + geom_boxplot(outlier.size=0.5) + theme_classic() +
-  facet_wrap(~g) + scale_y_continuous(breaks=c(0:max(cog.moca))) + # make ticks only for 1:max moca subscore score, which is 6
-  scale_fill_manual(values=clusterColors,name='') + ylab('Score') +
-  theme(legend.position = 'none',legend.key.size = unit(0.1,'in')) + # leg size c(0.1,0.75)
-  theme(text= element_text(size=8),axis.text.x = element_text(angle=90,vjust=0.5,hjust=1,color=clusterColors)) +
-  stat_compare_means(size=2,comparisons = comps) + xlab('')
-p <- mult.comp.ggpubr(p)
-pdf.options(reset = TRUE, onefile = FALSE)
-pdf(file = file.path(savedir,'MOCASubscoreBoxplotsbyClusterLouvain.pdf'),height = unit(4,'in'),width=unit(3.5,'in'),useDingbats = F)
-plot(ggplot_gtable(p))
-dev.off()
-
 # to get df and effect size for each test:
 
 clusterNames <- sort(unique(partitionSample))
@@ -159,6 +147,30 @@ for(MoCA.Category in colnames(cog.moca)){
     }
   }
 }
+
+get.mat.inds <- function(mat,inds) sapply(1:ncol(inds), function(j) mat[inds[1,j],inds[2,j]]) # iterate through unique combinations of clusters and get p-values from p-value matrix
+cluster.combs <- combn(clusterNames,2)
+p.table <- as.data.frame(sapply(pvals, function(X) get.mat.inds(X,cluster.combs)))
+rownames(p.table) <- sapply(1:ncol(cluster.combs), function(j) paste0(cluster.combs[1,j],' vs. ',cluster.combs[2,j]))
+p.table.print <- signif(p.table,digits = 2)
+p.table.print[p.table.print<0.001] <- 'p < 0.001'
+xtable(p.table.print,caption = 'FDR-corrected $p$-values for Figure \\ref{fig:figure4}',label = 'table:figure6pvals')
+
+which.sig.any <- which(rowSums(p.table<0.05)>1)
+comps <- lapply(as.data.frame(cluster.combs[,which.sig.any]),function(x) as.character(x))
+
+p <- ggplot(data=df,aes(x=x,y=y,fill=x)) + geom_boxplot(outlier.size=0.5) + theme_classic() +
+  facet_wrap(~g) + scale_y_continuous(breaks=c(0:max(cog.moca))) + # make ticks only for 1:max moca subscore score, which is 6
+  scale_fill_manual(values=clusterColors,name='') + ylab('Score') +
+  theme(legend.position = 'none',legend.key.size = unit(0.1,'in')) + # leg size c(0.1,0.75)
+  theme(text= element_text(size=8),axis.text.x = element_text(angle=90,vjust=0.5,hjust=1,color=clusterColors)) +
+  stat_compare_means(size=2,comparisons = comps) + xlab('')
+p <- mult.comp.ggpubr(p)
+pdf.options(reset = TRUE, onefile = FALSE)
+pdf(file = file.path(savedir,'MOCASubscoreBoxplotsbyClusterLouvain.pdf'),height = unit(4,'in'),width=unit(3.5,'in'),useDingbats = F)
+plot(ggplot_gtable(p))
+dev.off()
+
 # to get df and effect size for overall score tests:
 
 clusterNames <- sort(unique(partitionSample))

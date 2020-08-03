@@ -97,7 +97,7 @@ cog.moca <- cog.moca[,order(colnames(cog.moca))] # reorder column names to alpha
 colnames(cog.moca) <- c('Digit Attention','Repetition','Naming','Orientation','Recall','Visuospatial')
 
 df <- data.frame(x=rep(partitionSample,ncol(cog.moca)),y=as.vector(as.matrix(cog.moca)),g=rep(colnames(cog.moca),each=nrow(cog.moca)))
-save(df,file = paste(params$sourcedata.dir,'FigS10b_SourceData_CogIsolate',dz.iso,'.RData',sep=''))
+save(df,file = paste(params$sourcedata.dir,'FigS12b_SourceData_CogIsolate',dz.iso,'.RData',sep=''))
 
 p <- ggplot(data=df,aes(x=x,y=y,fill=x)) + geom_boxplot(outlier.size=0.5) + theme_classic() +
   facet_wrap(~g) + scale_y_continuous(breaks=c(0:max(cog.moca))) + # make ticks only for 1:max moca subscore score, which is 6

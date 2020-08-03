@@ -45,20 +45,22 @@ if(length(unique(featureMeans.max)) == length(featureMeans.max)){
   colnames(scores)[featureMeans.max] <- names(featureMeans.max)
   colnames(loadings)[featureMeans.max] <- names(featureMeans.max)
 }
+save(scores,loadings,file = paste0(params$opdir,'micekmeans/FactorAnalysisNamed.RData'))
+
 
 p <- imagesc(t(loadings),cmap='Blues') + 
   theme(axis.text.x = element_text(angle=90,hjust=1,vjust=0.5),text=element_text(size=6)) +
   theme(legend.key.size = unit(0.15,'cm'))
 ggsave(filename = paste0(savedir,'FactorLoadings.pdf'),plot = p,
        height = 6,width=18,units='cm')
-save(loadings,file=paste0(params$sourcedata.dir,'FigS9a_SourceData_EFALoadings.RData'))
+save(loadings,file=paste0(params$sourcedata.dir,'FigS10a_SourceData_EFALoadings.RData'))
 
 p <- imagesc(cor(scores),cmap='redblue',clim=c(-1,1)) + coord_equal() +
   theme(axis.text.x  = element_text(angle=90,hjust=1,vjust=0.5),text=element_text(size=6)) +
   theme(legend.key.size = unit(0.15,'cm'))
 ggsave(filename = paste0(savedir,'FactorCorrelation.pdf'),plot = p,
        height = 6,width=6,units='cm')
-save(loadings,file=paste0(params$sourcedata.dir,'FigS9b_SourceData_EFACovariance.RData'))
+save(loadings,file=paste0(params$sourcedata.dir,'FigS10b_SourceData_EFACovariance.RData'))
 
 ###########################################################################
 ### Relate factor scores to CSF variables in multiple linear regression ###
@@ -111,7 +113,7 @@ p <- ggplot() + geom_col(aes(x=names(r),y=r),fill='light blue') + theme_pubr()+
   ylab('R^2') + xlab('')
 ggsave(filename = paste0(savedir,'FactorsCSF.pdf'),plot = p,
        height = 5,width=6,units='cm')
-save(loadings,file=paste0(params$sourcedata.dir,'FigS9d_SourceData_EFACSFVarExplained.RData'))
+save(loadings,file=paste0(params$sourcedata.dir,'FigS10d_SourceData_EFACSFVarExplained.RData'))
 
 p <- ggplot() + geom_line(aes(x=1:length(featureTypes.name),y=unname(cumsum(explained))),color='red',alpha=0.5)+ 
   geom_line(aes(x=1:length(featureTypes.name),y=unname(explained)),color='light blue')+  theme_pubr()+
@@ -123,4 +125,4 @@ p <- ggplot() + geom_line(aes(x=1:length(featureTypes.name),y=unname(cumsum(expl
 p
 ggsave(filename = paste0(savedir,'FactorsVarianceExplained.pdf'),plot = p,
        height = 5,width=6,units='cm')
-save(loadings,file=paste0(params$sourcedata.dir,'FigS9c_SourceData_EFAPathologyVarExplained.RData'))
+save(loadings,file=paste0(params$sourcedata.dir,'FigS10c_SourceData_EFAPathologyVarExplained.RData'))

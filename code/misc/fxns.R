@@ -21,6 +21,17 @@ unit.test <- function(test,pass,fail){
 
 }
 
+pval.2tail.np <- function(test.val,dist){
+  # test.val: individual value being compared to distribution
+  # dist: vector,distribution of values under some null model, or otherwise
+  # sig.fig: number of significant figures
+  # compute 2-tailed p-value for test value occurring in distribution
+  dist <- as.numeric(dist)
+  pval.2tail <- 2*min(mean(test.val >= dist),mean(test.val <= dist))
+  return(pval.2tail)
+}
+
+
 normalize.ab <- function(x,a,b){
   # scale any vector x between a and b
   x <- (b-a)*(x-min(x))/(max(x)-min(x)) + a
@@ -61,6 +72,12 @@ fisher.r.to.z <- function(r){
 
 row.Which.Max <- function(x){
   rwm <- unlist(apply(x,1,function(y) which.max(y)))
+  return(rwm)
+}
+
+row.Which.Max.tie <- function(x){
+  rwm <- row.Which.Max(x)
+  rwm[sapply(apply(x,1,unique),length)==1] <- 0 # if row has no unique elements, then make max index 0
   return(rwm)
 }
 
@@ -495,6 +512,61 @@ region.by.item.matrix <- function(X,fxn='mean',vers = 'short'){
 
   # remove any regions or types with all NAs
   X.reshape <- X.reshape[rowSums(is.na(X.reshape)) < ncol(X.reshape),colSums(is.na(X.reshape)) < nrow(X.reshape)]
+  return(X.reshape)
+
+}
+
+collapse.columns <- function(df,cnames=colnames(df),groupby=NULL){
+  # INPUTS:
+  # df: dataframe
+  # cnames: column names to perform operation on, default to all columns
+  # groupby: column name to group variables by, treated separately from variables in cnames
+  
+  # OUTPUTS:
+  # df.new: dataframe with 2 columns:
+  # values: all columns in cnames vertically concatenated. 
+  # names: elements of cnames corresponding to rows
+  # group: groups of observations in df for each variable in cnames
+  
+  df.names <- do.call('cbind',lapply(cnames, function(n) rep(n,nrow(as.matrix(df[,cnames])))))  
+  df.new <- data.frame(values = as.vector(as.matrix(df[,cnames])),names=as.vector(df.names))
+  if(!is.null(groupby)){
+    df.grp <- do.call('cbind',lapply(cnames,function(n) df[,groupby]))
+    df.new$group <- as.vector(df.grp)
+  }
+  return(df.new)
+}
+
+region.item.average <- function(X,fxn='mean',vers = 'short',region.item){
+  # INPUTS:
+  # X: matrix whose columns are each pathological feature (region and type)
+  # fxn: median or mean
+  # vers: version of column names to use, passed through to get.pathscore.names (see get.pathscore.names)
+  # region.item: 'region' or 'item' to specify whether to average over regions or types of pathology
+  # OUTPUTS:
+  # X.reshape: matrix of average pathology for each region/item, aggregated over regions/types of pathology
+  
+  if(fxn=='mean'){fxn <- rowMeans
+  } else if(fxn=='nanmean'){fxn <- function(x){rowMeans(x,na.rm=T)}
+  } else if(fxn=='median'){fxn <- rowMedians}
+
+  list[pathItems.type,pathRegions.name] <- get.pathscore.names(vers=vers)
+  if(region.item == 'region'){agg.over <- pathRegions.name
+  } else if(region.item == 'item'){agg.over <- pathItems.type}
+  
+  X.reshape <- matrix(NA,nrow=nrow(X),ncol=length(agg.over),
+                                 dimnames = list(rownames(X),agg.over))
+  for(agg in agg.over){    
+    if(region.item == 'region'){aggMask <- grepl(paste0(agg,'_'),colnames(X))
+    } else {aggMask <- grepl(agg,colnames(X))}
+    if(sum(aggMask)>0){ # if there are any regions, otherwise leave NA
+      #print(paste0(region,'-',item,': ',sum(regionItemMask))) # make sure this process only selects one region
+      X.reshape[,agg] <- fxn(X[,aggMask,drop=FALSE])
+    }
+  }
+
+  # remove any regions or types with all NAs
+  X.reshape <- X.reshape[,colSums(is.na(X.reshape)) < nrow(X.reshape)]
   return(X.reshape)
 
 }

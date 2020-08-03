@@ -73,10 +73,10 @@ if(extralab == 'CSFOnlyAddNormalMMSE'){
   save(Fig6ad,file = paste(params$sourcedata.dir,'Fig6a-d_',extralab,'SourceData.RData',sep=''))
 }
 if(extralab == 'CSFGeneAddNormalMMSE'){
-  FigS14ad <- lapply(c(p.d.list,p.c.list),function(X) X$data)
-	save(FigS14ad,file = paste(params$sourcedata.dir,'FigS14a-d_',extralab,'SourceData.RData',sep=''))
+  FigS16ad <- lapply(c(p.d.list,p.c.list),function(X) X$data)
+	save(FigS16ad,file = paste(params$sourcedata.dir,'FigS16a-d_',extralab,'SourceData.RData',sep=''))
 }
 if(extralab == 'GeneOnlyAddNormalMMSE'){
-	FigS16ad <- lapply(c(p.d.list,p.c.list),function(X) X$data)
-  save(FigS16ad,file = paste(params$sourcedata.dir,'FigS16ad_',extralab,'SourceData.RData',sep=''))
+	FigS18ad <- lapply(c(p.d.list,p.c.list),function(X) X$data)
+  save(FigS18ad,file = paste(params$sourcedata.dir,'FigS18ad_',extralab,'SourceData.RData',sep=''))
 }

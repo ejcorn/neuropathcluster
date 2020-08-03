@@ -54,22 +54,7 @@ CSF.mean <- CSF.mean[,-1]
 df <- data.frame(y=as.vector(as.matrix(CSF.mean)),
                  x=rep(colnames(CSF.mean),each=nrow(CSF.mean)),
                  g=rep(partitionSample,ncol(CSF.mean)))
-comps <- lapply(as.data.frame(combn(levels(df$g),m = 2)),function(x) as.character(x))
-save(df,file = paste(params$sourcedata.dir,'Fig4b_SourceData.RData',sep=''))
-
-p <- ggplot(data=df,aes(x=g,y=y,fill=g)) + geom_boxplot(outlier.size=0.5) + theme_classic()+
-  facet_wrap(~x,scales='free') +
-  scale_fill_manual(values=clusterColors,name='') + ylab('CSF Protein (pg/ml)') + xlab('') +  
-  theme(legend.position = 'none',legend.key.size = unit(0.1,'in')) + #c(0.1,0.75)
-  theme(text= element_text(size=8),
-        axis.text.x = element_text(angle=90,vjust=0.5,hjust=1,color = clusterColors)) + 
-  stat_compare_means(size=2,comparisons = comps,position=5) 
-#p <- ggplot_build(p)
-p <- mult.comp.ggpubr(p)
-pdf.options(reset = TRUE, onefile = FALSE)
-pdf(file = paste(savedir,'/CSF',CSF.name,'BoxplotsbyClusterLouvain.pdf',sep=''),height = unit(4,'in'),width=unit(3.5,'in'),useDingbats = F)
-plot(ggplot_gtable(p)) #+ scale_y_continuous(limits=c(0,ymax))
-dev.off()
+save(df,file = paste(params$sourcedata.dir,'Fig6a_SourceData.RData',sep=''))
 
 # get sample size and effect size
 
@@ -100,3 +85,40 @@ for(CSF.protein in colnames(CSF.mean)){
     }
   }
 }
+get.mat.inds <- function(mat,inds) sapply(1:ncol(inds), function(j) mat[inds[1,j],inds[2,j]]) # iterate through unique combinations of clusters and get p-values from p-value matrix
+cluster.combs <- combn(clusterNames,2)
+p.table <- as.data.frame(sapply(p.vals, function(X) get.mat.inds(X,cluster.combs)))
+rownames(p.table) <- sapply(1:ncol(cluster.combs), function(j) paste0(cluster.combs[1,j],' vs. ',cluster.combs[2,j]))
+#signif(p.table,3)
+colnames(p.table) <- c('Total Tau','Phosphorylated Tau','Amyloid-$\beta_{1-42}')
+p.table.print <- signif(p.table,2)
+p.table.print[p.table.print<0.001] <-'p < 0.001'
+xtable(p.table.print,caption = '$p$-values for Figure \\ref{fig:figure6}',label = 'table:figure6_p2pvals')
+
+# now make plots showing only the significant test
+
+source('code/misc/facet_scale_override.R') # load custom functions to allow each facet to have independent y scales
+which.sig.any <- which(rowSums(p.table<0.05)>1)
+comps <- lapply(as.data.frame(cluster.combs[,which.sig.any]),function(x) as.character(x))
+
+nearest.k <- function(x,k=25) ceiling(max(x)/k)*k
+CSF.vars.sort <- sort(CSF.vars)
+p <- ggplot(data=df,aes(x=g,y=y,fill=g)) + geom_boxplot(outlier.size=0.5,size=0.25) + theme_classic()+
+  facet_wrap_custom(~x,scales='free',scale_overrides = list(
+    scale_override(1,scale_y_continuous(breaks=seq(0,nearest.k(df$y[df$x==CSF.vars.sort[1]]),by=50))),
+    scale_override(2,scale_y_continuous(breaks=seq(0,nearest.k(df$y[df$x==CSF.vars.sort[2]]),by=20))),
+    scale_override(3,scale_y_continuous(breaks=seq(0,nearest.k(df$y[df$x==CSF.vars.sort[3]]),by=50)))
+  ))+ 
+  scale_fill_manual(values=clusterColors,name='') + ylab('CSF Protein (pg/ml)') + xlab('') +  
+  theme(legend.position = 'none',legend.key.size = unit(0.1,'in')) + #c(0.1,0.75)
+  theme(text= element_text(size=8),
+        axis.text.x = element_text(angle=90,vjust=0.5,hjust=1,color = clusterColors)) + 
+  stat_compare_means(size=2,position=5,comparisons = comps)
+# left off: need to either manually delete non-significant comparisons or rewrite this script substantially
+p
+#p <- ggplot_build(p)
+p <- mult.comp.ggpubr(p)
+pdf.options(reset = TRUE, onefile = FALSE)
+pdf(file = paste(savedir,'/CSF',CSF.name,'BoxplotsbyClusterLouvain.pdf',sep=''),height = unit(2.5,'in'),width=unit(3.5,'in'),useDingbats = F)
+plot(ggplot_gtable(p)) #+ scale_y_continuous(limits=c(0,ymax))
+dev.off()

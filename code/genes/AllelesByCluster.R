@@ -86,7 +86,7 @@ for(g.i in names(betas)){
   for(a.i in names(betas[[g.i]])){
     plots[[g.i]][[a.i]] <- plot.allele.beta.matrix(betas[[g.i]][[a.i]],pvals[[g.i]][[a.i]],g.i,a.i,min.beta,max.beta,clusterColors)
     list[bmat,pmat] <- list(betas[[g.i]][[a.i]],pvals[[g.i]][[a.i]])
-    save(bmat,pmat,file = paste(params$sourcedata.dir,'Fig5c-g',g.i,'-',a.i,'_SourceData.RData',sep=''))
+    save(bmat,pmat,file = paste(params$sourcedata.dir,'Fig7c-g',g.i,'-',a.i,'_SourceData.RData',sep=''))
     latex[[g.i]][[a.i]] <- matrix(paste0('$\\beta=',signif(bmat,2),'$, $df=',deg.freedom[[g.i]],'$, $p_\\mathrm{FDR}=',signif(pmat,2),'$'),
                                   k,k,dimnames = list(clusterNames,clusterNames))
   }

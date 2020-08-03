@@ -17,17 +17,14 @@ def checkcites_output(aux_file):
 	result = result.stdout.decode('utf-8')
 	unused_array_raw = result.split('\n')
 	# process array of unused references + other output 
-	unused_array_final = list()
-	for x in unused_array_raw:
-		if len(x) > 0: # if line is not empty
-			if x[0] == '-':  # and if first character is a '-', it's a citation key
-				unused_array_final.append(x[2:]) # truncate '- '
-	return(unused_array_final)
+	cite_mask = np.array(['=>' in x for x in unused_array_raw]) # all citation keys in this output are in a line starting with =>
+	cite_keys_unused = [unused_array_raw[x].split('=> ')[1] for x in np.where(cite_mask)[0]]
+	return(cite_keys_unused)
 
 # for check cites to work, the .bib file must exist in the path specified in the .tex file used to generate the .aux file
 homedir = '/Users/Eli/Dropbox/Cornblath_Bassett_Projects/NeuroPathCluster/'
 os.chdir(homedir)
-paper_aux_file = 'neuropathcluster_v5_blue.aux' # name of aux file for paper
+paper_aux_file = 'neuropathcluster_v7_blue.aux' # name of aux file for paper
 bib_file = '../library.bib' # path to full library .bib file, same as one referenced in .tex file
 paper_bib_file = 'library_paper.bib' # name of .bib file output
 unused_in_paper = checkcites_output(paper_aux_file) # get citations in library not used in paper
@@ -67,7 +64,7 @@ for idx,k in enumerate(in_paper_citations):
 		del bib_data.entries_dict[k] # delete citation from dictionary if self citationi
 bib_data.entries = [bib_data.entries[x] for x in np.where(np.invert(self_cite_mask))[0]] # replace entries list with entries that aren't self citations
 
-paper_bib_file_excl_sc = os.path.splitext(paper_bib_file)[0] + '_excludeselfcite.bib'
+paper_bib_file_excl_sc = os.path.splitext(paper_bib_file)[0] + '_noselfcite.bib'
 
 with open(paper_bib_file_excl_sc, 'w') as bibtex_file:
     bibtexparser.dump(bib_data, bibtex_file)

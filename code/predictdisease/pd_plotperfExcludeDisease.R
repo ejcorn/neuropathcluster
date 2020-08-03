@@ -41,8 +41,8 @@ for(setup.name in names(setups)){
   
   if(extralab == "CSFOnlyAddNormalMMSEExcludeAlzheimer's disease"){
     if(setup.name == 'Clusters'){
-      FigS17ab <- lapply(p.list,function(X) X$data)
-  	  save(FigS17ab,file = paste(params$sourcedata.dir,'FigS17a-b_',extralab,'SourceData.RData',sep=''))
+      FigS19ab <- lapply(p.list,function(X) X$data)
+  	  save(FigS19ab,file = paste(params$sourcedata.dir,'FigS19a-b_',extralab,'SourceData.RData',sep=''))
     }
   }
   
@@ -76,8 +76,8 @@ for(setup.name in names(setups)){
   
   if(extralab == "CSFGeneAddNormalMMSEExcludeAlzheimer's disease"){
     if(setup.name == 'Clusters'){
-      FigS17cd <- lapply(p.list,function(X) X$data)
-      save(FigS17cd,file = paste(params$sourcedata.dir,'FigS17c-d_',extralab,'SourceData.RData',sep=''))
+      FigS19cd <- lapply(p.list,function(X) X$data)
+      save(FigS19cd,file = paste(params$sourcedata.dir,'FigS19c-d_',extralab,'SourceData.RData',sep=''))
     }
   }
   

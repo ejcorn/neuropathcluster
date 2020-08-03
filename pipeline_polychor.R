@@ -63,7 +63,8 @@ source('code/kmeans/Plot_PAMBootstrapReliabilityScrambleNorm.R') # Figure S6a-h 
 ### Perform expl. factor analysis on polychoric correlation matrix ###
 ######################################################################
 
-source('code/kmeans/Decomposition.R')
+source('code/kmeans/EFA.R')
+source('code/kmeans/PolychorFeatures.R')
 source('code/kmeans/AnalyzeEFA.R') # Fig S9
 source('code/kmeans/umap_cluster.R')
 
@@ -75,17 +76,18 @@ source('code/assesscluster/CharacterizeLouvainClustersDiseaseStages.R') # Fig 2d
 source('code/assesscluster/BreakdownOtherDiagnoses.R') # Fig S2
 source('code/assesscluster/ClinicalDxByCluster.R')
 source('code/assesscluster/SubjectCorrMatLouvain.R') # Fig 2a-c
-source('code/assesscluster/AgeMissingDataByCluster.R') # Fig S3a-g, Fig S5a-c
+source('code/assesscluster/AgeMissingDataByCluster.R') # Fig S3a-g, Fig S5a-c, Fig S6a
+source('code/assesscluster/EOADByCluster.R') # Fig S6b
 source('code/assesscluster/ADLBDClusterivsClusterj.R') # Fig 3a-f
 source('code/assesscluster/ClustersPathSpace.R')
-source('code/assesscluster/PathMatrixClustered.R') # Fig S8a
+source('code/assesscluster/PathMatrixClustered.R') # Fig S9a
 
 #######################################
 ### Make surface plots of centroids ###
 #######################################
 
 source('code/plot_brains/prep_centroid_plots.R') # prep data for runPlotBrainsMATLAB_R.R
-source('code/plot_brains/runPlotBrainsMATLAB_R.R') # Fig S7a
+source('code/plot_brains/runPlotBrainsMATLAB_R.R') # Fig S8a
 
 ########################################
 ### Cognition, Genes, CSF by cluster ###
@@ -93,10 +95,14 @@ source('code/plot_brains/runPlotBrainsMATLAB_R.R') # Fig S7a
 
 source('code/cogcsf/CogByCluster.R') # Fig 4a, Fig S4a
 source('code/genes/ProcessAlleles.R') # process for next 2 scripts
-source('code/genes/GenotypeProportionsByCluster.R') # Fig 5a-b
-source('code/genes/AllelesByCluster.R')  # Fig 5c-g
-source('code/cogcsf/CSFByCluster.R') # Fig 4b
+source('code/genes/GenotypeProportionsByCluster.R') # Fig 7a-b
+source('code/genes/AllelesByCluster.R')  # Fig 7c-g
+source('code/cogcsf/CSFByCluster.R') # Fig 6a
 source('code/cogcsf/CSFVsOnset.R') # Fig S4b
+source('code/cogcsf/MMSEByCluster.R') # Fig S4c-d
+
+source('code/cogcsf/predictMoCAMMSE.R') # Fig 5a-c computation
+source('code/cogcsf/plot_predictMoCAMMSE.R') # Fig 5a-c plot
 
 ################################
 ### Exclude/isolate diseases ###
@@ -158,3 +164,15 @@ for(extralab in extralabs){
   extralab <- paste(extralab,'Exclude',dz.exc,sep='')
   source('code/predictdisease/pd_plotperfExcludeDisease.R')
 }
+
+#############################################################
+### Predict disease labels using weighted class balancing ###
+#############################################################
+
+extralab <- 'CSFOnlyAddNormalMMSE'
+source('code/predictdisease/pd_traintestglm_WCB.R')
+source('code/predictdisease/pd_plotperfglm_WCB.R')
+
+extralab <- 'CSFGeneAddNormalMMSE'
+source('code/predictdisease/pd_traintestrf_WCB.R')
+source('code/predictdisease/pd_plotperfrf_WCB.R')
