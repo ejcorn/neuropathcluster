@@ -41,14 +41,14 @@ source('code/preprocess/demographics.R') # analyze demographics (age)
 ### Cluster Patients ###
 ########################
 
-source('code/clustering/PrepDataCluster.R') # compute polychoric correlation matrix... time consuming
-source('code/kmeans/pam.R')
+source('code/modmax/PrepDataCluster.R') # compute polychoric correlation matrix... time consuming
+source('code/kmedoids/pam.R')
 
 ######################################################################
 ### Perform expl. factor analysis on polychoric correlation matrix ###
 ######################################################################
 
-source('code/kmeans/Decomposition.R')
+source('code/kmedoids/Decomposition.R')
 
 #########################
 ### Assess clustering ###

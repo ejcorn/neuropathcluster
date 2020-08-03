@@ -97,7 +97,7 @@ xtable(p.table.print,caption = '$p$-values for Figure \\ref{fig:figure6}',label 
 
 # now make plots showing only the significant test
 
-source('code/misc/facet_scale_override.R') # load custom functions to allow each facet to have independent y scales
+source('code/misc/facet_scale_override.R') # load custom functions to allow each facet to have independent y scales. From https://fishandwhistle.net/post/2018/modifying-facet-scales-in-ggplot2/
 which.sig.any <- which(rowSums(p.table<0.05)>1)
 comps <- lapply(as.data.frame(cluster.combs[,which.sig.any]),function(x) as.character(x))
 

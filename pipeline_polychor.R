@@ -43,30 +43,32 @@ source('code/preprocess/GenerateSample_v3.R') # Fig S1a-d
 ### Cluster Patients ###
 ########################
 
-source('code/kmeans/Imputation.R')
-source('code/clustering/PrepDataCluster.R') # compute polychoric correlation matrix... time consuming
-source('code/kmeans/pam.R')
+source('code/kmedoids/Imputation.R')
+source('code/modmax/PrepDataCluster.R') # compute polychoric correlation matrix... time consuming
+source('code/kmedoids/pam.R')
 
 # modularity maximization
 if(params$gamma.opt < 2){
-  source('code/clustering/runGammaSweepMATLAB_R.R')
+  source('code/modmax/runGammaSweepMATLAB_R.R')
   sampfrac <- 0.5
-  source('code/clustering/runSplitReliabilityMATLAB_R.R')
+  source('code/modmax/runSplitReliabilityMATLAB_R.R')
   source('code/assesscluster/ProcessCluster.R') # make sure clusters are in same order every time
 }
 
-source('code/kmeans/PAMBootstrapReliabilityScrambleNorm.R') # bootstrap clustering
-source('code/kmeans/PartitionSimilarity_PAMBootstrapReliabilityScrambleNorm.R') # compute similarity between bootstrapped partitions
-source('code/kmeans/Plot_PAMBootstrapReliabilityScrambleNorm.R') # Figure S6a-h -- these three scripts are serially dependent
+source('code/kmedoids/PAMBootstrapReliabilityScrambleNorm.R') # bootstrap clustering
+source('code/kmedoids/PartitionSimilarity_PAMBootstrapReliabilityScrambleNorm.R') # compute similarity between bootstrapped partitions
+source('code/kmedoids/Plot_PAMBootstrapReliabilityScrambleNorm.R') # Figure S6a-h -- these three scripts are serially dependent
 
-######################################################################
-### Perform expl. factor analysis on polychoric correlation matrix ###
-######################################################################
+###########################################################################
+### Perform PCA, expl. factor analysis on polychoric correlation matrix ###
+###########################################################################
 
-source('code/kmeans/EFA.R')
-source('code/kmeans/PolychorFeatures.R')
-source('code/kmeans/AnalyzeEFA.R') # Fig S9
-source('code/kmeans/umap_cluster.R')
+source('code/decomposition/EFA.R')
+source('code/modmax/PolychorFeatures.R')
+source('code/decomposition/AnalyzeEFA.R') # Fig S9
+source('code/decomposition/umap_cluster.R')
+source('code/decomposition/PCA.R')
+source('code/decomposition/PCA_predict.R') # Fig S11
 
 #########################
 ### Assess clustering ###
@@ -164,15 +166,3 @@ for(extralab in extralabs){
   extralab <- paste(extralab,'Exclude',dz.exc,sep='')
   source('code/predictdisease/pd_plotperfExcludeDisease.R')
 }
-
-#############################################################
-### Predict disease labels using weighted class balancing ###
-#############################################################
-
-extralab <- 'CSFOnlyAddNormalMMSE'
-source('code/predictdisease/pd_traintestglm_WCB.R')
-source('code/predictdisease/pd_plotperfglm_WCB.R')
-
-extralab <- 'CSFGeneAddNormalMMSE'
-source('code/predictdisease/pd_traintestrf_WCB.R')
-source('code/predictdisease/pd_plotperfrf_WCB.R')

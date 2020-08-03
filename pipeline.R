@@ -41,10 +41,10 @@ source('code/preprocess/demographics.R') # analyze demographics (age)
 ### Cluster Patients ###
 ########################
 
-source('code/clustering/PrepDataCluster.R')
-source('code/clustering/runGammaSweepMATLAB_R.R')
+source('code/modmax/PrepDataCluster.R')
+source('code/modmax/runGammaSweepMATLAB_R.R')
 sampfrac <- 0.5
-source('code/clustering/runSplitReliabilityMATLAB_R.R')
+source('code/modmax/runSplitReliabilityMATLAB_R.R')
 
 #########################
 ### Assess clustering ###

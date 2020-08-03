@@ -6,6 +6,10 @@
 neuropathcluster_R*
 neuropathcluster_G*
 
+# pipeline
+pipeline*km*.R
+pipeline.R
+
 # data
 *.csv
 *.xlsx

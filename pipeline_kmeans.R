@@ -41,7 +41,7 @@ source('code/misc/directories.R')
 ### Cluster Patients ###
 ########################
 
-#source('code/kmeans/kmeans.R')
+#source('code/kmedoids/kmeans.R')
 
 #########################
 ### Assess clustering ###
